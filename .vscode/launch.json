@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "project-lax (Debug)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/project-lax.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "C:/raylib/w64devkit/bin/gdb.exe",
+            "setupCommands": [
+                {
+                    "description": "Use UTF-8 for source text and debug expressions",
+                    "text": "set charset UTF-8",
+                    "ignoreFailures": false
+                }
+            ],
+            "preLaunchTask": "Build Debug"
+        }
+    ]
+}
