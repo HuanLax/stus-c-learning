@@ -10,7 +10,7 @@ static void LoadSprites(UiAssets *assets)
         "gobin_down.png", "gobin_left.png", "gobin_right.png", "gobin_up.png", "boss.png", "leader.png", "seller.png",
         "map_two.png", "medical_stone.png", "stone.png", "Transport.png", "tree.png",
         "boss_arena.png", "cave_stalagmites.png", "cave_rubble.png",
-        "iron_sword.png", "wood_staff.png", "weapon_sword.png", "weapon_staff.png", "backpack.png" };
+        "iron_sword.png", "wood_staff.png", "weapon_sword.png", "weapon_staff.png", "backpack.png", "street_lamp.png" };
     for (int i = 0; i < SPRITE_COUNT; i++) {
         assets->sprites[i] = (Sprite){ 0 };
         char path[1024];

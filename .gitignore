@@ -2,3 +2,7 @@ bin/
 *.o
 saves/
 
+# Local cleanup archive and Windows shortcuts
+/_cleanup_review_*/
+/*.lnk
+

@@ -60,11 +60,27 @@ int main(void)
     InitializePlayer(&diagonal, world.spawn);
     assert(CanStandInWorld(&world, GetPlayerBody(world.spawn)));
     assert(FindWorldInteraction(&world, world.spawn) == -1);
-    /* Town artwork remains visible, but its former obstacle blocks are gone. */
+    /* Flat town artwork uses solid house silhouettes; lamp heads stay walkable. */
     for (int i = 0; i < world.sceneryCount; i++) {
         Rectangle r = world.scenery[i].collision;
-        assert(CanStandInWorld(&world, GetPlayerBody((Vector2){ r.x + r.width / 2, r.y + r.height / 2 })));
+        assert(!CanStandInWorld(&world, GetPlayerBody((Vector2){ r.x + r.width / 2, r.y + r.height / 2 })));
+        if (world.scenery[i].kind == SCENERY_HOUSE) {
+            assert(!CanStandInWorld(&world, GetPlayerBody((Vector2){ r.x + r.width / 2, r.y + 32 })));
+            assert(CanStandInWorld(&world, GetPlayerBody((Vector2){ r.x + r.width / 2, r.y + r.height + 16 })));
+        }
+        if (world.scenery[i].kind == SCENERY_LAMP) {
+            assert(r.width == 12 && r.height == 12);
+            assert(CanStandInWorld(&world, GetPlayerBody((Vector2){ r.x + 6, r.y - 16 })));
+        }
     }
+    assert(world.sceneryCount == 29);
+    const float townScale = 960.0f / 1254.0f;
+    assert(!CanStandInWorld(&world, GetPlayerBody((Vector2){ 627 * townScale, 610 * townScale })));
+    assert(!CanStandInWorld(&world, GetPlayerBody((Vector2){ 489 * townScale, 416 * townScale })));
+    assert(!CanStandInWorld(&world, GetPlayerBody((Vector2){ 1100 * townScale, 485 * townScale })));
+    assert(CanStandInWorld(&world, GetPlayerBody((Vector2){ 627 * townScale, 400 * townScale })));
+    assert(CanStandInWorld(&world, GetPlayerBody((Vector2){ 200 * townScale, 620 * townScale })));
+    assert(CanStandInWorld(&world, GetPlayerBody((Vector2){ 480, 360 })));
     assert(CanStandInWorld(&world, GetPlayerBody((Vector2){ 200, 350 })));
 
     /* Measure movement speed independently of interactions and map boundaries. */
@@ -92,17 +108,17 @@ int main(void)
     assert(CanStandInWorld(&world, GetPlayerBody(border.position)));
 
     Player house;
-    InitializePlayer(&house, (Vector2){ 104, 220 });
-    MovePlayer(&house, &world, (Vector2){ 1, 0 }, 2.0f);
+    InitializePlayer(&house, (Vector2){ 400, 200 });
+    MovePlayer(&house, &world, (Vector2){ -1, 0 }, 2.0f);
     Rectangle body = GetPlayerBody(house.position);
-    assert(house.position.x > 256);
+    assert(body.x >= world.scenery[0].collision.x + world.scenery[0].collision.width);
     assert(CanStandInWorld(&world, body));
 
     Player sliding;
-    InitializePlayer(&sliding, (Vector2){ 110, 200 });
-    MovePlayer(&sliding, &world, (Vector2){ 1, 1 }, 1.0f);
-    assert(sliding.position.y > 260);
-    assert(sliding.position.x > 128);
+    InitializePlayer(&sliding, (Vector2){ 200, 300 });
+    MovePlayer(&sliding, &world, (Vector2){ 1, -1 }, 1.0f);
+    assert(GetPlayerBody(sliding.position).y >= world.scenery[0].collision.y + world.scenery[0].collision.height);
+    assert(sliding.position.x > 200);
     assert(CanStandInWorld(&world, GetPlayerBody(sliding.position)));
 
     Player npc;
@@ -153,7 +169,33 @@ int main(void)
             assert(!CheckCollisionRecs(GetPlayerBody(approach.position), GetInteractionBody(object)));
         }
         if (map == MAP_FIELD) {
-            assert(maps[map].sceneryCount == 0);
+            const World *field = &maps[map];
+            for (int i = 0; i < field->sceneryCount; i++) {
+                Rectangle r = field->scenery[i].collision;
+                Vector2 centre = { r.x + r.width / 2, r.y + r.height / 2 };
+                assert(!CanStandInWorld(field, GetPlayerBody(centre)));
+                assert(!CheckCollisionRecs(r, field->safeArea));
+                Player approach;
+                InitializePlayer(&approach, (Vector2){ centre.x, r.y + r.height + 32 });
+                assert(CanStandInWorld(field, GetPlayerBody(approach.position)));
+                MovePlayer(&approach, field, (Vector2){ 0, -1 }, 1);
+                assert(GetPlayerBody(approach.position).y >= r.y + r.height);
+                assert(CanStandInWorld(field, GetPlayerBody(approach.position)));
+                if (field->scenery[i].kind == SCENERY_TREE)
+                    assert(CanStandInWorld(field, GetPlayerBody((Vector2){ centre.x, r.y - 16 })));
+            }
+            /* Sample the painted road centre lines, including their bends. */
+            const Vector2 road[] = {
+                {64,624}, {192,656}, {400,592}, {592,624}, {720,672}, {880,640}, {1024,592}, {1216,656},
+                {656,64}, {608,208}, {656,352}, {608,496},
+                {208,752}, {272,912}, {208,1072}, {240,1216},
+                {960,752}, {1008,896}, {960,1056}, {976,1216}
+            };
+            for (int i = 0; i < (int)(sizeof(road) / sizeof(road[0])); i++)
+                assert(CanStandInWorld(field, GetPlayerBody(road[i])));
+            assert(maps[map].tiles[6][19] == TILE_ROAD);
+            assert(maps[map].tiles[33][7] == TILE_ROAD);
+            assert(maps[map].tiles[33][30] == TILE_ROAD);
             for (int row = 1; row < maps[map].rows - 1; row++)
                 for (int col = 1; col < maps[map].columns - 1; col++) assert(maps[map].tiles[row][col] != TILE_WALL);
         }

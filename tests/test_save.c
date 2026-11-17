@@ -79,6 +79,36 @@ int main(void)
     app.player.hurtTimer = 0.3f; app.language = LANGUAGE_CHINESE;
     RoundTrip(&app, path, copy);
     SaveData base = CaptureSave(&app);
+    /* A valid pre-obstacle field snapshot keeps progress and actor health.
+       Only overlapping actors move; a shot inside a new rock is absorbed. */
+    EnterMap(&app, MAP_FIELD, app.worlds[MAP_FIELD].spawn);
+    SaveData fieldSave = CaptureSave(&app);
+    World previous[MAP_COUNT];
+    memcpy(previous, app.worlds, sizeof(previous));
+    previous[MAP_FIELD].sceneryCount = 0;
+    fieldSave.player.position = (Vector2){144,232};
+    fieldSave.combat.enemies[0].position = (Vector2){344,440};
+    fieldSave.combat.enemies[0].health = 45;
+    fieldSave.combat.projectiles[0] = (Projectile){ .active = true, .position = {344,432},
+        .direction = {1,0}, .remainingDistance = 100, .damage = 20 };
+    assert(WriteSave(bad, previous, &fieldSave) == SAVE_OK);
+    assert(ReadSave(bad, app.worlds, &loaded) == SAVE_OK);
+    assert(ValidateSave(&loaded, app.worlds));
+    assert(loaded.player.gold == base.player.gold && loaded.player.health == base.player.health);
+    assert(loaded.combat.enemies[0].health == 45 && !loaded.combat.projectiles[0].active);
+    assert(loaded.combat.enemies[1].position.x == fieldSave.combat.enemies[1].position.x &&
+        loaded.combat.enemies[1].position.y == fieldSave.combat.enemies[1].position.y);
+    assert(WriteSave(copy, previous, &fieldSave) == SAVE_OK && SameFile(bad, copy));
+    Corrupt(bad, copy, "location 1 144 232", "location 1 -10 232");
+    RejectFile(copy, app.worlds);
+    EnterMap(&app, MAP_TOWN, base.player.position);
+    /* Old decorative town scenery now blocks: migrate a scene snapshot. */
+    Corrupt(path, bad, "location 0 480.375 528.125", "location 0 192 208");
+    assert(ReadSave(bad, app.worlds, &loaded) == SAVE_OK && loaded.hasSnapshot);
+    assert(CanStandInWorld(&app.worlds[MAP_TOWN], GetPlayerBody(loaded.player.position)));
+    assert(loaded.player.gold == base.player.gold && loaded.quest.stage == base.quest.stage);
+    Corrupt(bad, copy, "location 0 192 208", "location 0 -10 208");
+    RejectFile(copy, app.worlds);
     ContinueGame(&app);
     assert(app.player.position.x == base.player.position.x && app.player.position.y == base.player.position.y);
     assert(app.player.health == 93 && app.player.hurtTimer == 0.3f && GetPlayerAttack(&app.player) == 40);

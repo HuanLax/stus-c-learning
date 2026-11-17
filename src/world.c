@@ -8,6 +8,8 @@ static void AddScenery(World *world, SceneryKind kind, Rectangle collision, Colo
     SpriteId sprite = kind == SCENERY_HOUSE ? (world->sceneryCount % 2 == 0 ? SPRITE_HOUSE_LEADER : SPRITE_HOUSE_SELLER) : SPRITE_TREE;
     if (kind == SCENERY_ROCK) sprite = world->id != MAP_BOSS ? SPRITE_ROCK :
         world->sceneryCount == 0 ? SPRITE_STALAGMITES : SPRITE_RUBBLE;
+    if (kind == SCENERY_LAMP) sprite = SPRITE_LAMP;
+    if (kind == SCENERY_FENCE || kind == SCENERY_WELL || kind == SCENERY_FLOWERBED) sprite = SPRITE_COUNT;
     world->scenery[world->sceneryCount++] = (Scenery){ kind, collision, color, sprite };
 }
 
@@ -17,19 +19,43 @@ static void AddInteraction(World *world, Interaction object)
     world->interactions[world->interactionCount++] = object;
 }
 
+/* Measurements use the unrotated 1254x1254 town artwork. */
+static void AddTownScenery(World *world, SceneryKind kind, Rectangle pixels, Color color)
+{
+    float scale = (float)(world->columns * TILE_SIZE) / 1254.0f;
+    Rectangle collision = { pixels.x * scale, pixels.y * scale, pixels.width * scale, pixels.height * scale };
+    AddScenery(world, kind, collision, color);
+}
+
 static void InitializeTown(World *world)
 {
-    /* Town scenery is decorative; only NPCs and healing stones block movement. */
-    AddScenery(world, SCENERY_HOUSE, (Rectangle){ 128, 160, 128, 96 }, (Color){ 124, 69, 58, 255 });
-    AddScenery(world, SCENERY_HOUSE, (Rectangle){ 672, 160, 128, 96 }, (Color){ 74, 90, 125, 255 });
-    AddScenery(world, SCENERY_HOUSE, (Rectangle){ 96, 608, 160, 96 }, (Color){ 136, 99, 55, 255 });
-    AddScenery(world, SCENERY_HOUSE, (Rectangle){ 704, 640, 128, 96 }, (Color){ 97, 66, 105, 255 });
-    AddScenery(world, SCENERY_TREE, (Rectangle){ 304, 256, 24, 20 }, DARKGREEN);
-    AddScenery(world, SCENERY_TREE, (Rectangle){ 592, 288, 24, 20 }, DARKGREEN);
-    AddScenery(world, SCENERY_TREE, (Rectangle){ 320, 688, 24, 20 }, DARKGREEN);
-    AddScenery(world, SCENERY_TREE, (Rectangle){ 608, 800, 24, 20 }, DARKGREEN);
-    AddScenery(world, SCENERY_ROCK, (Rectangle){ 352, 352, 32, 24 }, GRAY);
-    AddScenery(world, SCENERY_ROCK, (Rectangle){ 576, 704, 32, 24 }, GRAY);
+    /* These objects are already painted into map_main1.png. Keep collision
+       records, but draw their fallbacks only when that background is missing.
+       Whole house silhouettes are solid: a flat image has no separate roofs. */
+    AddTownScenery(world, SCENERY_HOUSE, (Rectangle){ 60, 8, 420, 352 }, (Color){ 124, 69, 58, 255 });
+    AddTownScenery(world, SCENERY_HOUSE, (Rectangle){ 784, 12, 392, 352 }, (Color){ 74, 90, 125, 255 });
+    AddTownScenery(world, SCENERY_HOUSE, (Rectangle){ 45, 786, 425, 351 }, (Color){ 136, 99, 55, 255 });
+    AddTownScenery(world, SCENERY_HOUSE, (Rectangle){ 780, 795, 396, 344 }, (Color){ 97, 66, 105, 255 });
+    const Vector2 lamps[] = {
+        {489,416}, {768,416}, {357,750}, {899,754}
+    };
+    for (int i = 0; i < 4; i++) {
+        float x = lamps[i].x * (TOWN_COLUMNS * TILE_SIZE / 1254.0f);
+        float y = lamps[i].y * (TOWN_ROWS * TILE_SIZE / 1254.0f);
+        AddScenery(world, SCENERY_LAMP, (Rectangle){ x - 6, y - 6, 12, 12 }, GOLD);
+    }
+    const Rectangle fences[] = {
+        {352,440,146,34}, {768,440,134,34}, {350,782,148,38}, {768,790,134,34},
+        {42,477,166,15}, {1054,477,166,15}, {42,744,166,15}, {1054,744,166,15},
+        {540,165,15,138}, {701,165,15,138}, {535,900,17,141}, {701,900,17,141}
+    };
+    for (int i = 0; i < 12; i++) AddTownScenery(world, SCENERY_FENCE, fences[i], BROWN);
+    AddTownScenery(world, SCENERY_WELL, (Rectangle){ 575,500,104,162 }, GRAY);
+    const Rectangle flowerbeds[] = {
+        {382,480,82,61}, {788,480,86,61}, {391,726,83,52}, {784,728,88,55},
+        {148,376,88,47}, {1141,342,85,58}, {366,1098,112,55}, {1052,1106,92,50}
+    };
+    for (int i = 0; i < 8; i++) AddTownScenery(world, SCENERY_FLOWERBED, flowerbeds[i], DARKGREEN);
 
     AddInteraction(world, (Interaction){ .kind = INTERACTION_QUEST, .position = { 400, 464 } });
     AddInteraction(world, (Interaction){ .kind = INTERACTION_SHOP, .position = { 592, 464 } });
@@ -44,9 +70,16 @@ static void InitializeTiles(World *world)
         for (int col = 0; col < world->columns; col++) {
             bool border = row == 0 || col == 0 || row == world->rows - 1 || col == world->columns - 1;
             bool road = world->id == MAP_TOWN ?
-                (col >= 14 && col <= 15) || (row >= 14 && row <= 16) ||
-                ((row == 8 || row == 23) && col >= 6 && col <= 23) ||
-                ((col == 6 || col == 23) && row >= 8 && row <= 23) : row >= middleRow - 1 && row <= middleRow + 1;
+                (col >= 13 && col <= 16) || (row >= 12 && row <= 17) ||
+                (col >= 11 && col <= 20 && row >= 10 && row <= 19) :
+                row >= middleRow - 1 && row <= middleRow + 1;
+            if (world->id == MAP_FIELD) {
+                /* Approximate the imported north branch and two south branches.
+                   Grass and road share walkability, so these are fallback art. */
+                road = road || (col >= 18 && col <= 20 && row <= 20) ||
+                    (col >= 6 && col <= 8 && row >= 20) ||
+                    (col >= 29 && col <= 31 && row >= 20);
+            }
             world->tiles[row][col] = border ? TILE_WALL : road ? TILE_ROAD : TILE_GRASS;
         }
     }
@@ -55,6 +88,21 @@ static void InitializeTiles(World *world)
 static void InitializeAdventureObjects(World *world)
 {
     if (world->id == MAP_FIELD) {
+        /* Independent sprites over the unchanged grass artwork. Tree collision
+           covers roots only; keep roads, junctions and spawn patrols open. */
+        const Vector2 trees[] = {
+            {144,240}, {240,288}, {432,176}, {896,224}, {1104,272},
+            {1168,352}, {112,1008}, {464,1136}, {784,1088}, {1120,1136}
+        };
+        for (int i = 0; i < (int)(sizeof(trees) / sizeof(trees[0])); i++)
+            AddScenery(world, SCENERY_TREE,
+                (Rectangle){ trees[i].x - 12, trees[i].y - 16, 24, 16 }, DARKGREEN);
+        const Rectangle rocks[] = {
+            {320,416,48,32}, {784,384,56,40}, {1088,464,40,28},
+            {352,960,56,36}, {688,896,48,32}, {1056,1008,56,40}
+        };
+        for (int i = 0; i < (int)(sizeof(rocks) / sizeof(rocks[0])); i++)
+            AddScenery(world, SCENERY_ROCK, rocks[i], GRAY);
         AddInteraction(world, (Interaction){ INTERACTION_EXIT, { 80, 624 }, MAP_TOWN, { 848, 480 } });
         AddInteraction(world, (Interaction){ INTERACTION_EXIT, { 1184, 656 }, MAP_BOSS, { 112, 400 } });
         AddInteraction(world, (Interaction){ .kind = INTERACTION_HEAL, .position = { 144, 688 } });
@@ -126,8 +174,10 @@ bool CanStandInWorld(const World *world, Rectangle body)
             if (world->tiles[row][col] == TILE_WALL) return false;
         }
     }
-    for (int i = 0; world->id != MAP_TOWN && i < world->sceneryCount; i++) {
-        if (CheckCollisionRecs(body, world->scenery[i].collision)) return false;
+    for (int i = 0; i < world->sceneryCount; i++) {
+        Scenery object = world->scenery[i];
+        Rectangle r = object.collision;
+        if (CheckCollisionRecs(body, r)) return false;
     }
     for (int i = 0; i < world->interactionCount; i++) {
         Interaction object = world->interactions[i];
@@ -232,19 +282,71 @@ static void DrawPerson(Vector2 feet, Color clothing)
 static void DrawScenery(Scenery object, const UiAssets *assets)
 {
     Rectangle r = object.collision;
+    /* Fit the fallback roof inside the same solid house silhouette. */
+    if (object.kind == SCENERY_HOUSE) { r.y += 64; r.height -= 64; }
     Vector2 size = { r.width + 8, r.height + (object.sprite == SPRITE_STALAGMITES ? 48 : 16) };
-    if (object.kind == SCENERY_HOUSE) size = (Vector2){ r.width + 16, r.height + 72 };
+    if (object.kind == SCENERY_HOUSE) size = (Vector2){ r.width, r.height + 64 };
     else if (object.kind == SCENERY_TREE) size = (Vector2){ 72, 96 };
+    else if (object.kind == SCENERY_LAMP) size = (Vector2){ 24, 72 };
     if (DrawSprite(assets, object.sprite, (Vector2){ r.x + r.width / 2, r.y + r.height },
         size, (Color){ 255, 255, 255, object.color.a })) return;
     /* Missing artwork keeps its original code-drawn fallback. */
     if (object.kind == SCENERY_HOUSE) {
-        DrawRectangleRec(r, (Color){ 177, 157, 114, 255 });
-        DrawRectangle((int)r.x - 8, (int)r.y - 48, (int)r.width + 16, 56, object.color);
-        DrawRectangleLinesEx((Rectangle){ r.x - 8, r.y - 48, r.width + 16, 56 }, 3, DARKBROWN);
-        DrawRectangle((int)(r.x + r.width / 2 - 12), (int)(r.y + r.height - 40), 24, 40, DARKBROWN);
-        DrawRectangle((int)r.x + 16, (int)r.y + 24, 22, 24, (Color){ 81, 130, 149, 255 });
-        DrawRectangle((int)(r.x + r.width - 38), (int)r.y + 24, 22, 24, (Color){ 81, 130, 149, 255 });
+        Color wall = { 195, 178, 133, object.color.a };
+        DrawRectangleRec(r, wall);
+        DrawRectangle((int)r.x, (int)(r.y + r.height - 20), (int)r.width, 20, (Color){ 119, 119, 105, object.color.a });
+        for (int x = 0; x < (int)r.width; x += 48) {
+            DrawRectangle((int)r.x + x, (int)r.y, 6, (int)r.height - 20, DARKBROWN);
+        }
+        DrawRectangle((int)r.x, (int)r.y - 64, (int)r.width, 80, object.color);
+        for (int y = -60; y < 16; y += 12) {
+            DrawLine((int)r.x + 3, (int)r.y + y, (int)(r.x + r.width) - 3, (int)r.y + y, DARKBROWN);
+        }
+        DrawRectangleLinesEx((Rectangle){ r.x, r.y - 64, r.width, 80 }, 4, DARKBROWN);
+        DrawRectangle((int)(r.x + r.width / 2 - 16), (int)(r.y + r.height - 48), 32, 48, DARKBROWN);
+        DrawCircle((int)(r.x + r.width / 2 + 8), (int)(r.y + r.height - 28), 2, GOLD);
+        for (int side = 0; side < 2; side++) {
+            int x = (int)(r.x + (side ? r.width - 68 : 28));
+            DrawRectangle(x - 4, (int)r.y + 42, 48, 42, DARKBROWN);
+            DrawRectangle(x, (int)r.y + 46, 40, 34, (Color){ 111, 168, 175, object.color.a });
+            DrawRectangle(x + 18, (int)r.y + 46, 4, 34, DARKBROWN);
+            DrawRectangle(x, (int)r.y + 60, 40, 4, DARKBROWN);
+            /* Small attached flower boxes stay inside the solid house footprint. */
+            DrawRectangle(x - 4, (int)r.y + 86, 48, 8, BROWN);
+            for (int flower = 0; flower < 5; flower++) {
+                DrawRectangle(x + flower * 8, (int)r.y + 80, 4, 6, DARKGREEN);
+                DrawRectangle(x + flower * 8, (int)r.y + 78, 4, 4, flower % 2 ? GOLD : MAROON);
+            }
+        }
+    } else if (object.kind == SCENERY_LAMP) {
+        int x = (int)(r.x + r.width / 2), bottom = (int)(r.y + r.height);
+        DrawRectangleRec(r, (Color){ 82, 79, 68, 255 });
+        DrawRectangle(x - 3, bottom - 58, 6, 52, DARKBROWN);
+        DrawRectangle(x - 10, bottom - 64, 20, 19, DARKBROWN);
+        DrawRectangle(x - 7, bottom - 61, 14, 13, GOLD);
+        DrawRectangle(x - 1, bottom - 61, 2, 13, BROWN);
+        DrawRectangle(x - 12, bottom - 68, 24, 4, DARKBROWN);
+        DrawRectangle(x - 6, bottom - 72, 12, 4, DARKBROWN);
+    } else if (object.kind == SCENERY_FENCE) {
+        DrawRectangle((int)r.x, (int)r.y - 13, (int)r.width, 6, (Color){ 145, 110, 66, 255 });
+        DrawRectangle((int)r.x, (int)r.y - 2, (int)r.width, 5, BROWN);
+        for (int x = 0; x <= (int)r.width - 8; x += 24) {
+            DrawRectangle((int)r.x + x, (int)r.y - 20, 8, (int)r.height + 20, DARKBROWN);
+            DrawRectangle((int)r.x + x, (int)r.y - 20, 8, 3, (Color){ 168, 130, 80, 255 });
+        }
+    } else if (object.kind == SCENERY_WELL) {
+        DrawRectangleRec(r, (Color){ 105, 108, 101, 255 });
+        DrawRectangle((int)r.x - 4, (int)r.y - 4, (int)r.width + 8, 16, (Color){ 164, 159, 134, 255 });
+        DrawRectangle((int)r.x + 6, (int)r.y, (int)r.width - 12, 7, (Color){ 34, 66, 76, 255 });
+        DrawRectangle((int)r.x + 2, (int)r.y - 32, 4, 32, DARKBROWN);
+        DrawRectangle((int)(r.x + r.width - 6), (int)r.y - 32, 4, 32, DARKBROWN);
+        DrawRectangle((int)r.x - 6, (int)r.y - 36, (int)r.width + 12, 8, (Color){ 124, 69, 58, 255 });
+        DrawLine((int)(r.x + r.width / 2), (int)r.y - 28, (int)(r.x + r.width / 2), (int)r.y + 2, BROWN);
+    } else if (object.kind == SCENERY_FLOWERBED) {
+        DrawRectangleRec(r, (Color){ 148, 140, 116, 255 });
+        DrawRectangle((int)r.x + 3, (int)r.y + 3, (int)r.width - 6, (int)r.height - 6, DARKGREEN);
+        for (int x = 6; x < (int)r.width - 4; x += 8)
+            DrawRectangle((int)r.x + x, (int)r.y + 5, 4, 5, x % 3 ? PINK : GOLD);
     } else if (object.kind == SCENERY_TREE) {
         DrawRectangle((int)r.x + 8, (int)r.y - 12, 8, (int)r.height + 12, DARKBROWN);
         DrawRectangle((int)r.x - 12, (int)r.y - 48, 48, 28, object.color);
@@ -288,6 +390,28 @@ static void DrawTiles(const World *world)
                                                 (Color){ 76, 116, 70, 255 };
             if (world->id == MAP_BOSS && tile == TILE_GRASS) color = (Color){ 66, 63, 72, 255 };
             DrawRectangle(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE, color);
+            if (world->id == MAP_BOSS || tile == TILE_WALL) continue;
+            int x = col * TILE_SIZE, y = row * TILE_SIZE;
+            unsigned int variation = (unsigned int)(row * 97 + col * 53);
+            if (tile == TILE_ROAD && world->id == MAP_TOWN) {
+                /* Uneven old pavers, shallow seams and occasional grass in cracks. */
+                for (int brick = 0; brick < 4; brick++) {
+                    int by = y + brick * 8;
+                    Color stone = { (unsigned char)(151 + (variation + brick * 7) % 23),
+                        (unsigned char)(143 + (variation + brick * 7) % 20), 116, 255 };
+                    DrawRectangle(x + 1, by + 1, 30, 6, stone);
+                    DrawRectangle(x + (brick % 2 ? 9 : 22), by + 1, 1, 6, (Color){ 116, 111, 85, 255 });
+                }
+                if (variation % 7 == 0) DrawRectangle(x + 6, y + 23, 3, 5, (Color){ 80, 110, 61, 255 });
+            } else if (tile == TILE_GRASS) {
+                int gx = x + 4 + (int)(variation % 22), gy = y + 5 + (int)((variation / 3) % 20);
+                DrawRectangle(gx, gy, 2, 5, (Color){ 93, 134, 72, 255 });
+                DrawRectangle(gx - 3, gy + 2, 2, 3, (Color){ 57, 96, 54, 255 });
+                if (variation % 17 == 0) DrawRectangle(gx + 4, gy + 2, 2, 2, (Color){ 213, 194, 119, 255 });
+            } else {
+                DrawRectangle(x + 4 + (int)(variation % 20), y + 8, 4, 2, (Color){ 147, 128, 89, 255 });
+                DrawRectangle(x + 9, y + 20, 3, 2, (Color){ 180, 158, 114, 255 });
+            }
         }
     }
 }
@@ -357,6 +481,8 @@ static void DrawObjects(const World *world, Vector2 playerPosition, Vector2 swor
             if (playerVisible && !DrawSprite(assets, GetFacingSprite(SPRITE_PLAYER_DOWN, swordFacing),
                 playerPosition, (Vector2){ 32, 32 }, WHITE)) DrawPerson(playerPosition, (Color){ 51, 104, 177, 255 });
         } else if (index < SCENERY_CAPACITY) {
+            /* The complete town artwork already includes all town scenery. */
+            if (world->id == MAP_TOWN && assets && IsTextureValid(assets->sprites[SPRITE_TOWN].texture)) continue;
             Scenery object = world->scenery[index];
             Rectangle r = object.collision;
             bool behind = playerPosition.y < r.y + r.height &&

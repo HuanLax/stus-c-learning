@@ -26,6 +26,23 @@ int main(void)
     InitializeCombat(&combat, MAP_FIELD);
     assert(combat.enemyCount == 6);
     for (int i = 0; i < combat.enemyCount; i++) assert(CanEnemyStand(&world, combat.enemies[i].spawn));
+    /* Traverse each real tree/rock from left to right, without crossing it. */
+    for (int i = 0; i < world.sceneryCount; i++) {
+        Setup(&world, &combat, &player);
+        Rectangle r = world.scenery[i].collision;
+        Enemy *walker = &combat.enemies[0];
+        walker->position = (Vector2){ r.x - 48, r.y + r.height / 2 + 12 };
+        Vector2 goal = { r.x + r.width + 48, walker->position.y };
+        assert(CanEnemyStand(&world, walker->position) && CanEnemyStand(&world, goal));
+        assert(!CanEnemyStand(&world, (Vector2){ r.x + r.width / 2, walker->position.y }));
+        assert(!HasCombatLineOfSight(&world, (Vector2){ walker->position.x, walker->position.y - 12 },
+            (Vector2){ goal.x, goal.y - 12 }));
+        for (int frame = 0; frame < 150 && Distance(walker->position, goal) > 1; frame++) {
+            MoveEnemyTowards(walker, &world, goal, 64, 0.05f, &combat, &player);
+            assert(CanEnemyStand(&world, walker->position));
+        }
+        assert(Distance(walker->position, goal) <= 1);
+    }
     Setup(&world, &combat, &player);
     for (int frame = 0; frame < 30; frame++) UpdateCombat(&combat, &player, &world, 0.05f, false);
     assert(Distance(combat.enemies[0].position, combat.enemies[0].spawn) > 1);

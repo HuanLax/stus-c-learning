@@ -267,6 +267,50 @@ bool ValidateSave(const SaveData *data, const World worlds[MAP_COUNT])
            (!data->hasSnapshot || ValidSnapshot(data, &worlds[data->map]));
 }
 
+/* Called only after validation against the earlier, obstacle-free field. */
+static void MoveOffFieldScenery(const World *world, Vector2 *position, Rectangle body, bool enemy)
+{
+    if (CanStandInWorld(world, body)) return;
+    float closest = INFINITY;
+    Vector2 nearest = *position;
+    for (int row = 1; row < world->rows - 1; row++) {
+        for (int col = 1; col < world->columns - 1; col++) {
+            Vector2 candidate = { col * TILE_SIZE + 16, row * TILE_SIZE + 16 };
+            float dx = candidate.x - position->x, dy = candidate.y - position->y;
+            Rectangle moved = { body.x + dx, body.y + dy, body.width, body.height };
+            float distance = dx * dx + dy * dy;
+            if (distance < closest && CanStandInWorld(world, moved) &&
+                (!enemy || !CheckCollisionRecs(moved, world->safeArea))) {
+                closest = distance;
+                nearest = candidate;
+            }
+        }
+    }
+    *position = nearest;
+}
+
+static void MigrateFieldScenery(SaveData *data, const World worlds[MAP_COUNT])
+{
+    if (data->map != MAP_FIELD || ValidateSave(data, worlds)) return;
+    World previous[MAP_COUNT];
+    memcpy(previous, worlds, sizeof(previous));
+    previous[MAP_FIELD].sceneryCount = 0;
+    /* Reject malformed saves even when they also overlap a new obstacle. */
+    if (!ValidateSave(data, previous)) return;
+    const World *field = &worlds[MAP_FIELD];
+    MoveOffFieldScenery(field, &data->player.position, GetPlayerBody(data->player.position), false);
+    if (!data->hasSnapshot) return;
+    for (int i = 0; i < data->combat.enemyCount; i++) {
+        Enemy *enemy = &data->combat.enemies[i];
+        MoveOffFieldScenery(field, &enemy->position, GetEnemyCollision(enemy), true);
+    }
+    for (int i = 0; i < PROJECTILE_CAPACITY; i++) {
+        Projectile *shot = &data->combat.projectiles[i];
+        if (shot->active && !CanStandInWorld(field,
+            (Rectangle){ shot->position.x - 4, shot->position.y - 4, 8, 8 })) shot->active = false;
+    }
+}
+
 SaveResult ReadSave(const char *path, const World worlds[MAP_COUNT], SaveData *output)
 {
     FILE *file = fopen(path, "rb");
@@ -321,6 +365,36 @@ SaveResult ReadSave(const char *path, const World worlds[MAP_COUNT], SaveData *o
     valid = valid && ReadLabel(file, "END") && fscanf(file, "%1s", extra) == EOF && !ferror(file);
     if (fclose(file) != 0) return SAVE_IO_ERROR;
     if (!valid) return SAVE_INVALID;
+    MigrateFieldScenery(&data, worlds);
+    /* Earlier town layouts let players stand inside decorative scenery.
+       Move only those overlaps to the nearest walkable tile centre. Other
+       invalid coordinates still fail validation, and the file is not rewritten. */
+    if (data.map == MAP_TOWN && isfinite(data.player.position.x) && isfinite(data.player.position.y)) {
+        const World *town = &worlds[MAP_TOWN];
+        Rectangle body = GetPlayerBody(data.player.position);
+        bool inScenery = false;
+        for (int i = 0; i < town->sceneryCount; i++) {
+            if (CheckCollisionRecs(body, town->scenery[i].collision)) inScenery = true;
+        }
+        if (inScenery && !CanStandInWorld(town, body) && body.x >= TILE_SIZE && body.y >= TILE_SIZE &&
+            body.x + body.width <= (town->columns - 1) * TILE_SIZE &&
+            body.y + body.height <= (town->rows - 1) * TILE_SIZE) {
+            float closest = INFINITY;
+            Vector2 nearest = data.player.position;
+            for (int row = 1; row < town->rows - 1; row++) {
+                for (int col = 1; col < town->columns - 1; col++) {
+                    Vector2 candidate = { col * TILE_SIZE + 16, row * TILE_SIZE + 16 };
+                    float dx = candidate.x - data.player.position.x, dy = candidate.y - data.player.position.y;
+                    float distance = dx * dx + dy * dy;
+                    if (distance < closest && CanStandInWorld(town, GetPlayerBody(candidate))) {
+                        closest = distance;
+                        nearest = candidate;
+                    }
+                }
+            }
+            data.player.position = nearest;
+        }
+    }
     /* A v1 player could stand on a healing stone before it became solid.
        Migrate only that known layout change, never arbitrary invalid positions. */
     if (!data.hasSnapshot && !CanStandInWorld(&worlds[data.map], GetPlayerBody(data.player.position))) {
