@@ -16,7 +16,6 @@
 #define CLOSE_BUTTON ((Rectangle){ 392, 452, 240, 52 })
 #define ITEM_CLOSE_BUTTON ((Rectangle){ 664, 628, 240, 44 })
 #define HUD_PANEL ((Rectangle){ 12, 12, 1000, 108 })
-#define ULTIMATE_BUTTON ((Rectangle){ 734, 602, 132, 150 })
 #define BAG_BUTTON ((Rectangle){ 880, 602, 132, 150 })
 
 static void DrawItemIcon(const UiAssets *assets, ItemId item, Vector2 centre, float size);
@@ -39,7 +38,7 @@ bool IsPointerOverHud(const App *app)
         CheckCollisionPointRec(mouse, HUD_PANEL) ||
         CheckCollisionPointRec(mouse, (Rectangle){ 24, 128, 620, 48 }) ||
         CheckCollisionPointRec(mouse, (Rectangle){ 660, 128, 352, 48 }) ||
-        CheckCollisionPointRec(mouse, ULTIMATE_BUTTON) || CheckCollisionPointRec(mouse, BAG_BUTTON) ||
+        CheckCollisionPointRec(mouse, BAG_BUTTON) ||
         CheckCollisionPointRec(mouse, (Rectangle){ 24, 736, 560, 28 }) ||
         (app->nearbyInteraction >= 0 && CheckCollisionPointRec(mouse, INTERACTION_BUTTON));
 }
@@ -343,7 +342,7 @@ static TextId GetInteractionName(Interaction object)
 }
 
 /* Small HUD ornaments are drawn by raylib; values and labels remain live text. */
-typedef enum HudSymbol { HUD_HEART, HUD_GEM, HUD_LEAF, HUD_COIN } HudSymbol;
+typedef enum HudSymbol { HUD_HEART, HUD_LEAF, HUD_COIN } HudSymbol;
 
 static void DrawHudSymbol(HudSymbol symbol, Vector2 centre, float size)
 {
@@ -357,11 +356,6 @@ static void DrawHudSymbol(HudSymbol symbol, Vector2 centre, float size)
         DrawCircle((int)(x + r * 0.38f), (int)(y - r * 0.3f), r * 0.5f, RED);
         DrawTriangle((Vector2){ x - r * 0.83f, y }, (Vector2){ x, y + r * 0.8f }, (Vector2){ x + r * 0.83f, y }, MAROON);
         DrawCircle((int)(x - r * 0.48f), (int)(y - r * 0.5f), r * 0.17f, (Color){ 255, 189, 153, 255 });
-    } else if (symbol == HUD_GEM) {
-        DrawPoly(centre, 4, r + 2, 0, edge);
-        DrawPoly(centre, 4, r, 0, (Color){ 33, 136, 216, 255 });
-        DrawTriangle((Vector2){ x, y - r }, (Vector2){ x - r, y }, centre, SKYBLUE);
-        DrawLineEx((Vector2){ x, y - r + 2 }, (Vector2){ x, y + r - 2 }, 2, (Color){ 169, 235, 255, 255 });
     } else if (symbol == HUD_LEAF) {
         DrawEllipse((int)x, (int)y, r * 0.7f + 2, r + 2, edge);
         DrawEllipse((int)x, (int)y, r * 0.7f, r, (Color){ 99, 159, 38, 255 });
@@ -420,10 +414,8 @@ static void DrawWorldHud(const App *app)
     DrawLine(211, 28, 211, 105, (Color){ 172, 129, 78, 255 });
 
     snprintf(text, sizeof(text), GetUiText(app->language, TEXT_HUD_HP), app->player.health, app->player.maxHealth);
-    DrawHudMeter(app, (Rectangle){ 239, 34, 234, 28 }, (float)app->player.health / app->player.maxHealth,
+    DrawHudMeter(app, (Rectangle){ 239, 34, 498, 28 }, (float)app->player.health / app->player.maxHealth,
         (Color){ 172, 35, 32, 255 }, HUD_HEART, text);
-    DrawHudMeter(app, (Rectangle){ 503, 34, 234, 28 }, 0, (Color){ 31, 112, 175, 255 },
-        HUD_GEM, GetUiText(app->language, TEXT_HUD_MP));
     int next = ExperienceForNextLevel(app->player.level);
     if (next > 0) snprintf(text, sizeof(text), GetUiText(app->language, TEXT_HUD_XP), app->player.experience, next);
     else snprintf(text, sizeof(text), "%s", GetUiText(app->language, TEXT_XP_MAX));
@@ -455,17 +447,6 @@ static void DrawWorldHud(const App *app)
 static void DrawHudActions(const App *app)
 {
     Color ink = (Color){ 48, 34, 24, 255 };
-    DrawMedievalPanel(ULTIMATE_BUTTON);
-    /* A visible reserved slot, not an attack with invented combat rules. */
-    for (int i = 0; i < 8; i++) {
-        Vector2 point = { 759 + (i % 3) * 35.0f, 620 + (i / 3) * 21.0f };
-        DrawLineEx((Vector2){ 800, 650 }, point, 2, (Color){ 111, 163, 174, 255 });
-    }
-    DrawItemIcon(&app->assets, ITEM_STEEL_SWORD, (Vector2){ 800, 650 }, 76);
-    DrawTextInBox(app, (Rectangle){ 740, 694, 120, 24 }, GetUiText(app->language, TEXT_ULTIMATE), 22, ink);
-    DrawUiPanel((Rectangle){ 746, 723, 108, 21 }, 0.15f, (Color){ 98, 94, 79, 255 }, (Color){ 65, 55, 37, 255 });
-    DrawTextInBox(app, (Rectangle){ 746, 723, 108, 21 }, GetUiText(app->language, TEXT_NOT_AVAILABLE), 13, RAYWHITE);
-
     DrawMedievalPanel(BAG_BUTTON);
     if (CheckCollisionPointRec(GetMousePosition(), BAG_BUTTON))
         DrawRectangleRec((Rectangle){ 888, 610, 116, 134 }, (Color){ 255, 244, 201, 45 });
