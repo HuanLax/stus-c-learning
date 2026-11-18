@@ -1,3 +1,4 @@
+/* 存档读写：文本格式、数据验证、旧档迁移及临时文件替换。 */
 #include "save.h"
 
 #include <errno.h>
@@ -19,6 +20,7 @@
 #undef DrawText
 #undef Rectangle
 
+/* ===== 基础字段解析与现场序列化 ===== */
 static bool ReadLabel(FILE *file, const char *expected)
 {
     char token[128];
@@ -151,6 +153,7 @@ static bool SnapshotFields(SaveIo *io, SaveData *data)
     return io->good;
 }
 
+/* ===== 存档数据与状态关系验证 ===== */
 static bool Between(float value, float minimum, float maximum)
 {
     return isfinite(value) && value >= minimum && value <= maximum;
@@ -268,6 +271,7 @@ bool ValidateSave(const SaveData *data, const World worlds[MAP_COUNT])
 }
 
 /* Called only after validation against the earlier, obstacle-free field. */
+/* ===== 旧版地图存档迁移 ===== */
 static void MoveOffFieldScenery(const World *world, Vector2 *position, Rectangle body, bool enemy)
 {
     if (CanStandInWorld(world, body)) return;
@@ -311,6 +315,7 @@ static void MigrateFieldScenery(SaveData *data, const World worlds[MAP_COUNT])
     }
 }
 
+/* ===== 读取、迁移并提交存档 ===== */
 SaveResult ReadSave(const char *path, const World worlds[MAP_COUNT], SaveData *output)
 {
     FILE *file = fopen(path, "rb");
@@ -418,6 +423,7 @@ SaveResult ReadSave(const char *path, const World worlds[MAP_COUNT], SaveData *o
     return SAVE_OK;
 }
 
+/* ===== 写入临时文件并替换存档 ===== */
 SaveResult WriteSave(const char *path, const World worlds[MAP_COUNT], const SaveData *data)
 {
     if (!ValidateSave(data, worlds)) return SAVE_INVALID;

@@ -37,6 +37,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -Con
 | 暂停 / 返回 | Esc |
 | 切换中英文 | F2 |
 | 手动保存 | 游戏窗口内 F5，需和平且存活 |
+| 音乐静音 / 取消静音 | F6 |
+| 音乐音量降低 / 提高 | F7 / F8，每次 10% |
 
 攻击朝向跟随移动方向；剑为四向、法杖为八向。主城和入口安全区不能攻击。战斗中可以查看背包，但不能换装。
 
@@ -46,6 +48,18 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -Con
 
 窗口支持缩放和最大化，最小 640×480；以 1024×768 虚拟画布等比例适配，地图镜头为 2 倍。当前人物使用四向静态图片，攻击效果仍使用程序绘制；MP 和终结技是未开放的界面预留位。
 
+## 背景音乐
+
+音乐默认音量为 50%，自动循环；切图时停止上一首并从头播放目标地图的音乐。主菜单使用主城曲目，暂停、背包、商店及对话界面继续播放当前音乐。音量与静音设置仅在本次运行中保留。
+
+| 场景 | `assets/audio/` 中的文件 |
+|---|---|
+| 主菜单、主城 | `Morning_at_the_Sovereign_Gate.mp3` |
+| 哥布林草地 | `Steps_in_the_Green.mp3` |
+| 巢穴 | `Titan_s_Heavy_Step.mp3` |
+
+音乐路径相对于程序定位，从快捷方式或其他工作目录启动都可加载。文件缺失或声卡不可用时，游戏仍可运行，并在日志中提示原因。
+
 ## 存档
 
 个人进度保存在 `saves/save.txt`。正常退出自动保存原地图、位置、战斗现场和界面；继续游戏恢复保存状态。主菜单直接退出不会覆盖已有存档。
@@ -54,13 +68,16 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -Con
 
 ## 文件位置
 
+查找代码或修改游戏内容时，先看 [项目代码分类与修改索引](docs/CODE_GUIDE.md)：按功能说明全部源码模块，并列出标题、文案、数值、地图、资源和按键的修改位置。
+
 | 路径 | 用途 |
 |---|---|
 | `src/` | 游戏 C 源码和头文件 |
 | `pic/` | 当前游戏使用的 25 张 PNG |
 | `assets/fonts/` | 中文字体与分发授权，需一起保留 |
+| `assets/audio/` | 三张地图的 MP3 背景音乐，需一起保留 |
 | `scripts/build.ps1` | 构建与逻辑检查入口 |
-| `tests/` | 六组逻辑检查源码，构建脚本仍使用 |
+| `tests/` | 六组逻辑检查与一组音乐检查源码 |
 | `bin/project-lax.exe` | 当前可运行程序 |
 | `saves/` | 个人存档 |
 | `docs/MAP_LAYOUT.md` | 最新地图坐标、障碍与旧档迁移说明 |
@@ -73,6 +90,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -Con
 ## 开发检查
 
 构建时可按需增加 `-CheckMovement`、`-CheckCombat`、`-CheckAI`、`-CheckInventory`、`-CheckQuest`、`-CheckSave`，可同时启用。检查会在 `bin` 中重新生成测试程序和测试文件。
+
+`-CheckMusic` 使用本机声卡静音检查三首实际 MP3 的加载、播放进度、切曲和结尾循环，需要可用的音频设备；不修改个人存档。
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -CheckMovement -CheckCombat -CheckAI -CheckInventory -CheckQuest -CheckSave

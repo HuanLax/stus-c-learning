@@ -1,3 +1,4 @@
+/* 界面与输入：按钮、键盘操作、菜单、状态栏、背包、对话及各类弹窗。 */
 #include "ui.h"
 
 #include <stdio.h>
@@ -5,6 +6,7 @@
 #include <string.h>
 
 /* C99 color literals keep the existing palette without file-scope variables. */
+/* ===== 界面颜色与布局常量 ===== */
 #define UI_BG ((Color){ 16, 20, 28, 255 })
 #define UI_PANEL ((Color){ 28, 34, 46, 245 })
 #define UI_BORDER ((Color){ 72, 84, 102, 255 })
@@ -21,6 +23,7 @@
 static void DrawItemIcon(const UiAssets *assets, ItemId item, Vector2 centre, float size);
 
 /* A click is queried, not consumed: each screen still decides its priority. */
+/* ===== 输入辅助与通用绘制 ===== */
 static bool Clicked(Rectangle bounds)
 {
     return IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), bounds);
@@ -106,6 +109,7 @@ static void DrawMedievalPanel(Rectangle bounds)
     }
 }
 
+/* ===== 按钮标识与布局 ===== */
 typedef enum PreviewButton {
     BUTTON_ENGLISH,
     BUTTON_CHINESE,
@@ -149,6 +153,7 @@ static void OpenFromMenu(App *app, bool preferSave)
     else StartNewGame(app);
 }
 
+/* ===== 按界面状态处理输入 ===== */
 void UpdateUi(App *app)
 {
     if (app->screen == SCREEN_NEW_CONFIRM || app->screen == SCREEN_SAVE_ERROR) {
@@ -247,6 +252,7 @@ static void DrawCenteredText(Font font, const char *text, float y,
                fontSize, 1.0f, color);
 }
 
+/* ===== 文本排版与按钮绘制 ===== */
 static void DrawCenteredLabel(const App *app, TextId id, float y, float size, Color color)
 {
     const char *text = GetUiText(app->language, id);
@@ -295,6 +301,7 @@ static void DrawButton(const App *app, PreviewButton button, TextId label,
     DrawTextInBox(app, bounds, text, 24, ink);
 }
 
+/* ===== 主菜单 ===== */
 static void DrawMenu(const App *app)
 {
     Color ink = UI_TEXT;
@@ -308,7 +315,7 @@ static void DrawMenu(const App *app)
         DrawRectangle(i * 64, 630 - height, 48, height, (Color){ 27, 38, 44, 255 });
     }
     DrawUiPanel((Rectangle){ 76, 64, 872, 568 }, 0.02f, UI_PANEL, UI_BORDER);
-    DrawCenteredText(app->assets.font, "project-lax", 124.0f, 52.0f, UI_ACCENT);
+    DrawCenteredText(app->assets.font, "PROJECT_LAX", 124.0f, 52.0f, UI_ACCENT);
     DrawCenteredLabel(app, TEXT_SUBTITLE, 206.0f, 24.0f, ink);
     DrawCenteredLabel(app, TEXT_STAGE, 300.0f, 22.0f, UI_ACCENT);
     DrawCenteredLabel(app, TEXT_DESCRIPTION, 350.0f, 20.0f, muted);
@@ -323,6 +330,7 @@ static void DrawMenu(const App *app)
     DrawButton(app, BUTTON_CONTINUE, TEXT_LOAD_GAME, false, app->saveAvailable);
     DrawCenteredLabel(app, app->saveMessage, 644.0f, 18.0f, app->saveAvailable ? SKYBLUE : ORANGE);
     DrawCenteredLabel(app, TEXT_FOOTER, 700.0f, 18.0f, muted);
+    DrawCenteredLabel(app, TEXT_MUSIC_HELP, 730.0f, 16.0f, muted);
     if (!app->assets.supportsChinese) {
         DrawCenteredText(app->assets.font, GetUiText(LANGUAGE_ENGLISH, TEXT_FONT_ERROR),
                           674.0f, 16.0f, ORANGE);
@@ -331,6 +339,7 @@ static void DrawMenu(const App *app)
     }
 }
 
+/* ===== 场景名称与状态栏 ===== */
 static TextId GetInteractionName(Interaction object)
 {
     if (object.kind == INTERACTION_EXIT) {
@@ -444,6 +453,7 @@ static void DrawWorldHud(const App *app)
         DrawLabel(app, TEXT_DISENGAGE, 810, 155, 13, ink, (double)(app->combat.rules.disengageDelay - app->combat.lostTimer));
 }
 
+/* ===== 快捷按钮、交互提示与任务目标 ===== */
 static void DrawHudActions(const App *app)
 {
     Color ink = (Color){ 48, 34, 24, 255 };
@@ -478,6 +488,7 @@ static void GetQuestObjective(const App *app, char *text, size_t capacity)
     else snprintf(text, capacity, "%s", GetUiText(app->language, objectives[app->quest.stage]));
 }
 
+/* ===== 背包与商店面板 ===== */
 static void DrawItemIcon(const UiAssets *assets, ItemId item, Vector2 centre, float size)
 {
     if (item <= ITEM_NONE || item >= ITEM_COUNT) return;
@@ -579,6 +590,7 @@ static void DrawItemPanel(const App *app)
     DrawLabel(app, shop ? TEXT_SHOP_HELP : TEXT_BAG_HELP, 128, 681, 15, GRAY);
 }
 
+/* ===== 任务对话面板 ===== */
 static void DrawQuestPanel(const App *app)
 {
     DrawOverlay(220, 484, 155);
@@ -599,6 +611,7 @@ static void DrawQuestPanel(const App *app)
     DrawTextEx(app->assets.font, page, (Vector2){ 128, 650 }, 18, 1, GRAY);
 }
 
+/* ===== 游戏世界与角色名称 ===== */
 static void DrawGameWorld(const App *app)
 {
     ClearBackground((Color){ 23, 34, 37, 255 });
@@ -640,6 +653,7 @@ static void DrawGameWorld(const App *app)
     EndScissorMode();
 }
 
+/* ===== 确认框与状态弹窗 ===== */
 static void DrawConfirmation(const App *app)
 {
     bool newGame = app->screen == SCREEN_NEW_CONFIRM;
@@ -703,6 +717,7 @@ static void DrawScreenPanel(const App *app)
     }
 }
 
+/* ===== 界面总绘制入口 ===== */
 void DrawUi(const App *app)
 {
     if (app->screen == SCREEN_MENU) {

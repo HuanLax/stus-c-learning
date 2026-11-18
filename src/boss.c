@@ -1,8 +1,10 @@
+/* 头目行为：重斩判定、散射法术、攻击切换及预警绘制。 */
 #include "boss.h"
 #include "enemy_ai.h"
 
 #include <math.h>
 
+/* ===== 重斩范围与方向计算 ===== */
 bool BossSlashHits(const Enemy *boss, Rectangle target)
 {
     Vector2 origin = GetEnemyAttackOrigin(boss);
@@ -20,6 +22,7 @@ static Vector2 RotateDirection(Vector2 direction, float radians)
                       direction.x * sinf(radians) + direction.y * cosf(radians) };
 }
 
+/* ===== 头目行为更新 ===== */
 void UpdateBoss(Combat *combat, Enemy *boss, Player *player, const World *world, float seconds)
 {
     if (boss->state == ENEMY_PATROL) return;
@@ -58,6 +61,7 @@ void UpdateBoss(Combat *combat, Enemy *boss, Player *player, const World *world,
     }
 }
 
+/* ===== 攻击预警绘制 ===== */
 void DrawBossTelegraph(const Enemy *boss)
 {
     Vector2 centre = GetEnemyAttackOrigin(boss);

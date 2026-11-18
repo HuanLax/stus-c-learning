@@ -1,8 +1,10 @@
+/* 角色与成长：初始属性、升级、伤害、复活、移动及武器朝向。 */
 #include "player.h"
 
 #include <math.h>
 #include <stddef.h>
 
+/* ===== 初始属性、升级与攻击力 ===== */
 void InitializePlayer(Player *player, Vector2 spawn)
 {
     player->position = spawn;
@@ -50,6 +52,7 @@ int GetPlayerAttack(const Player *player)
     return player->baseAttack + GetItemDefinition(item).attackBonus;
 }
 
+/* ===== 受伤、碰撞体与复活 ===== */
 bool DamagePlayer(Player *player, int damage)
 {
     if (player->health <= 0 || damage <= 0 || player->hurtTimer > 0) return false;
@@ -71,6 +74,7 @@ void RevivePlayer(Player *player)
     player->hurtTimer = 0;
 }
 
+/* ===== 移动与武器朝向 ===== */
 static void UpdateFacing(Player *player, Vector2 direction)
 {
     player->staffFacing = direction;

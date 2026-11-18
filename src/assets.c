@@ -1,8 +1,10 @@
+/* 资源管理：图片映射、贴图绘制、中文字符收集、字体加载与资源释放。 */
 #include "assets.h"
 #include "text.h"
 
 #include <stdio.h>
 
+/* ===== 图片文件映射与贴图绘制 ===== */
 static void LoadSprites(UiAssets *assets)
 {
     const char *const names[SPRITE_COUNT] = { "map_main1.png", "house_leader.png", "house_seller.png",
@@ -54,6 +56,7 @@ bool DrawSprite(const UiAssets *assets, SpriteId id, Vector2 feet, Vector2 maxim
 }
 
 /* Only requested characters enter the GPU atlas, not the whole CJK font. */
+/* ===== 字符收集与字体加载 ===== */
 static bool AddTextCodepoints(const char *text, int *codepoints,
                               int *count, int capacity)
 {
@@ -153,6 +156,7 @@ void LoadUiAssets(UiAssets *assets)
     TraceLog(LOG_INFO, "APP: All %i requested font characters are available", count);
 }
 
+/* ===== 资源释放 ===== */
 void UnloadUiAssets(UiAssets *assets)
 {
     for (int i = 0; i < SPRITE_COUNT; i++) {

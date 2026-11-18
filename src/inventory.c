@@ -1,5 +1,7 @@
+/* 物品与交易：武器定义、背包初始化、装备检查和购买规则。 */
 #include "inventory.h"
 
+/* ===== 武器属性与背包初始化 ===== */
 ItemDefinition GetItemDefinition(ItemId item)
 {
     const ItemDefinition definitions[ITEM_COUNT] = {
@@ -22,6 +24,7 @@ void InitializeInventory(Inventory *inventory)
     inventory->equippedStaff = 1;
 }
 
+/* ===== 装备读取与换装 ===== */
 ItemId GetEquippedItem(const Inventory *inventory, Weapon weapon)
 {
     int slot = weapon == WEAPON_SWORD ? inventory->equippedSword : inventory->equippedStaff;
@@ -45,6 +48,7 @@ InventoryResult EquipInventoryItem(Inventory *inventory, int slot, bool inCombat
     return INVENTORY_OK;
 }
 
+/* ===== 购买检查与交易提交 ===== */
 InventoryResult BuyInventoryItem(Inventory *inventory, int *gold, ItemId item)
 {
     if (item != ITEM_STEEL_SWORD && item != ITEM_RUNE_STAFF) return INVENTORY_INVALID;

@@ -1,8 +1,10 @@
+/* 普通敌人行为：网格寻路、移动避障、巡逻、追击、攻击和脱战重置。 */
 #include "enemy_ai.h"
 #include "boss.h"
 
 #include <math.h>
 
+/* ===== 通行检查与网格寻路 ===== */
 static float Distance(Vector2 a, Vector2 b)
 {
     return sqrtf((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
@@ -84,6 +86,7 @@ Vector2 FindEnemyWaypoint(const World *world, Vector2 start, Vector2 goal)
     return FindWaypointSized(world, start, goal, false);
 }
 
+/* ===== 移动、角色避障与路径更新 ===== */
 void MoveEnemyTowards(Enemy *enemy, const World *world, Vector2 goal, float speed, float seconds,
                       const Combat *combat, const Player *player)
 {
@@ -122,6 +125,7 @@ void MoveEnemyTowards(Enemy *enemy, const World *world, Vector2 goal, float spee
     }
 }
 
+/* ===== 脱战重置与行为状态机 ===== */
 static void EndEncounter(Combat *combat)
 {
     combat->inCombat = false;
