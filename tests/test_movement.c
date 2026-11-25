@@ -200,6 +200,11 @@ int main(void)
                 for (int col = 1; col < maps[map].columns - 1; col++) assert(maps[map].tiles[row][col] != TILE_WALL);
         }
         if (map == MAP_BOSS) {
+            Vector2 exit = maps[map].interactions[0].position;
+            assert(exit.x > 0 && exit.x < maps[map].columns * TILE_SIZE);
+            assert(exit.y > 0 && exit.y < maps[map].rows * TILE_SIZE);
+            assert(CanStandInWorld(&maps[map], GetPlayerBody(exit)));
+            assert(IsBodyInSafeArea(&maps[map], GetPlayerBody(exit)));
             assert(!CanStandInWorld(&maps[map], GetPlayerBody((Vector2){ 64, 64 })));
             assert(CanStandInWorld(&maps[map], GetPlayerBody((Vector2){ 448, 448 })));
         }

@@ -240,9 +240,9 @@ bool ValidateSave(const SaveData *data, const World worlds[MAP_COUNT])
     if (p->level < 1 || p->level > 5 || p->maxHealth != 100 + 20 * (p->level - 1) ||
         p->baseAttack != 20 + 4 * (p->level - 1) || p->health < (data->hasSnapshot ? 0 : 1) || p->health > p->maxHealth ||
         p->experience < 0 || (p->level == 5 ? p->experience != 0 : p->experience >= ExperienceForNextLevel(p->level)) ||
-        p->gold < 0 || p->gold > 1000000000 || p->weapon < WEAPON_SWORD || p->weapon > WEAPON_STAFF) return false;
-    if (p->meleeDefeated < 0 || p->meleeDefeated > 1000000 || p->rangedDefeated < 0 || p->rangedDefeated > 1000000 ||
-        p->defeatedGoblins != p->meleeDefeated + p->rangedDefeated ||
+        p->gold < 0 || p->gold > PLAYER_GOLD_LIMIT || p->weapon < WEAPON_SWORD || p->weapon > WEAPON_STAFF) return false;
+    if (p->meleeDefeated < 0 || p->rangedDefeated < 0 ||
+        (long long)p->defeatedGoblins != (long long)p->meleeDefeated + p->rangedDefeated ||
         q->startingMelee < 0 || q->startingMelee > p->meleeDefeated ||
         q->startingRanged < 0 || q->startingRanged > p->rangedDefeated) return false;
     bool cleared = QuestMeleeProgress(q, p) == 4 && QuestRangedProgress(q, p) == 2;

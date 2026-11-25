@@ -1,0 +1,5 @@
+{
+    "projectLax.gccPath": "C:/raylib/w64devkit/bin/gcc.exe",
+    "projectLax.gdbPath": "C:/raylib/w64devkit/bin/gdb.exe",
+    "projectLax.raylibPath": "C:/raylib/raylib/src"
+}
