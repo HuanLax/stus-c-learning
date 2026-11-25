@@ -1,6 +1,7 @@
 #include "app.h"
 #include <assert.h>
 #include <math.h>
+#include <limits.h>
 #include <share.h>
 #include <stdio.h>
 #include <string.h>
@@ -79,6 +80,20 @@ int main(void)
     app.player.hurtTimer = 0.3f; app.language = LANGUAGE_CHINESE;
     RoundTrip(&app, path, copy);
     SaveData base = CaptureSave(&app);
+    /* Legal long-running progress must remain writable beyond the old kill cap. */
+    SaveData rich = base;
+    rich.player.meleeDefeated = 1000001;
+    rich.player.rangedDefeated = 1000001;
+    rich.player.defeatedGoblins = 2000002;
+    rich.player.gold = PLAYER_GOLD_LIMIT - 1;
+    GrantPlayerRewards(&rich.player, INT_MAX, 0);
+    assert(rich.player.gold == PLAYER_GOLD_LIMIT);
+    assert(WriteSave(copy, app.worlds, &rich) == SAVE_OK);
+    assert(ReadSave(copy, app.worlds, &loaded) == SAVE_OK);
+    assert(loaded.player.defeatedGoblins == 2000002 && loaded.player.gold == PLAYER_GOLD_LIMIT);
+    rich.player.meleeDefeated = INT_MAX;
+    rich.player.rangedDefeated = INT_MAX;
+    assert(!ValidateSave(&rich, app.worlds));
     /* A valid pre-obstacle field snapshot keeps progress and actor health.
        Only overlapping actors move; a shot inside a new rock is absorbed. */
     EnterMap(&app, MAP_FIELD, app.worlds[MAP_FIELD].spawn);

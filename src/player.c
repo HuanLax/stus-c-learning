@@ -33,7 +33,8 @@ int ExperienceForNextLevel(int level)
 
 void GrantPlayerRewards(Player *player, int gold, int experience)
 {
-    if (gold > 0) player->gold += gold;
+    if (gold > 0) player->gold += gold > PLAYER_GOLD_LIMIT - player->gold ?
+        PLAYER_GOLD_LIMIT - player->gold : gold;
     if (experience <= 0 || player->level >= 5) return;
     player->experience += experience;
     while (player->level < 5 && player->experience >= ExperienceForNextLevel(player->level)) {

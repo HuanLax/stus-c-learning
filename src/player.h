@@ -4,6 +4,8 @@
 #include "world.h"
 #include "inventory.h"
 
+enum { PLAYER_GOLD_LIMIT = 1000000000 };
+
 typedef struct Player {
     Vector2 position; /* feet centre, not the top-left of the picture */
     Vector2 swordFacing;

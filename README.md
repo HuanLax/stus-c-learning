@@ -17,7 +17,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -Con
 
 发布构建将 `Debug` 改为 `Release`，两种配置都输出 `bin/project-lax.exe`。
 
-构建配置使用以下依赖；更换电脑或安装路径后，调整 `scripts/build.ps1` 的参数与 `.vscode` 配置：
+构建需要 GCC、GDB 和 raylib。命令行脚本支持 `-CompilerPath` / `-RaylibSourcePath`，也支持环境变量 `PROJECT_LAX_GCC` / `PROJECT_LAX_RAYLIB`；未指定时会查找 PATH 中的 GCC、项目上级目录的工具链和以下常用安装位置。VS Code 的三个依赖路径统一在 `.vscode/settings.json` 中设置，构建、调试和代码提示共用：
 
 - GCC：`C:\raylib\w64devkit\bin\gcc.exe`
 - GDB：`C:\raylib\w64devkit\bin\gdb.exe`
@@ -81,11 +81,10 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -Con
 | `bin/project-lax.exe` | 当前可运行程序 |
 | `saves/` | 个人存档 |
 | `docs/MAP_LAYOUT.md` | 最新地图坐标、障碍与旧档迁移说明 |
-| `_cleanup_review_2026-11-17/` | 已归档的旧文档、测试产物与临时文件，供检查后自行删除 |
 
 地图详细坐标见 [地图布局](docs/MAP_LAYOUT.md)。中文字体使用 Noto Sans CJK SC，授权见 [LICENSE.txt](assets/fonts/LICENSE.txt)。
 
-早期阶段讲解、原版 README、美术接入记录和未来功能备忘录，已集中到待清理文件夹的 `02_old_documents/`；其中的旧规则属于开发历史。需要准备代码讲解时，可先保留这些资料。
+旧试玩副本、历史截图、备份和过期阶段文档已清理。当前地图资源与旧存档迁移代码仍保留，确保已有进度可以读取。
 
 ## 开发检查
 

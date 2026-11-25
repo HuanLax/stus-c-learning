@@ -1,6 +1,7 @@
 #include "app.h"
 
 #include <assert.h>
+#include <limits.h>
 #include <stdio.h>
 
 int main(void)
@@ -91,6 +92,17 @@ int main(void)
     app.nearbyInteraction = 1;
     ActivateNearbyInteraction(&app);
     assert(app.screen == SCREEN_SHOP);
+    /* At integer capacity, rewards still pay once without wrapping kill counts. */
+    InitializeCombat(&app.combat, MAP_FIELD);
+    app.player.meleeDefeated = INT_MAX - 2;
+    app.player.rangedDefeated = 1;
+    app.player.defeatedGoblins = INT_MAX - 1;
+    app.combat.enemies[0].health = 0;
+    app.combat.enemies[1].health = 0;
+    assert(ClaimEnemyRewards(&app.combat, &app.player) == 2);
+    assert(app.player.defeatedGoblins == INT_MAX);
+    assert(app.player.meleeDefeated == INT_MAX - 1 && app.player.rangedDefeated == 1);
+    assert(ClaimEnemyRewards(&app.combat, &app.player) == 0);
     puts("PASS: atomic purchases, bag full, unique upgrades, manual equipment, combat lock, derived damage, level cap, one-time rewards and progress-preserving revival");
     return 0;
 }

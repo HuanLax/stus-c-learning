@@ -106,6 +106,22 @@ static void InitializeAdventureObjects(World *world)
         for (int i = 0; i < (int)(sizeof(rocks) / sizeof(rocks[0])); i++)
             AddScenery(world, SCENERY_ROCK, rocks[i], GRAY);
         AddInteraction(world, (Interaction){ INTERACTION_EXIT, { 80, 624 }, MAP_TOWN, { 848, 480 } });
+        /* ===== 草地右侧传送点：以后修改此入口，搜索这条注释 =====
+           下方 Interaction 的四项依次为：
+           1. INTERACTION_EXIT：传送交互类型，靠近后按 E / 点击交互按钮触发。
+           2. {1184, 656}：传送点在草地地图内的位置（世界坐标，非屏幕坐标）。
+              草地为 1280×1280，左上角为 (0,0)，x 向右、y 向下。
+           3. MAP_BOSS：目标地图；改为其他 MapId 即改变传送目的地。
+           4. {112, 400}：进入目标地图后的玩家落点，必须在该地图可站立区域内。
+           功能修改索引：
+           - 任务解锁限制：本文件 TryMapExit() 中 destination == MAP_BOSS 的判断；
+             解锁条件定义在 quest.c 的 IsBossUnlocked()。
+           - 按 E 后的行为、未解锁提示：app.c 的 ActivateNearbyInteraction()。
+             如只修改这个入口的行为，请同时判断 currentMap == MAP_FIELD 和 index == 1。
+           - 图标：本文件 DrawGround() 的 SPRITE_PORTAL，图片映射在 assets.c。
+           - 入口名称：ui.c 的 GetInteractionName()，目前按目标地图选择名称。
+           此点是草地 interactions[1]，测试也引用此索引；调整添加顺序时须同步检查。
+        */
         AddInteraction(world, (Interaction){ INTERACTION_EXIT, { 1184, 656 }, MAP_BOSS, { 112, 400 } });
         AddInteraction(world, (Interaction){ .kind = INTERACTION_HEAL, .position = { 144, 688 } });
     } else {

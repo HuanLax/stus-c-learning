@@ -4,6 +4,7 @@
 #include "boss.h"
 
 #include <math.h>
+#include <limits.h>
 
 /* ===== 敌人名称与碰撞体 ===== */
 const char *GetEnemyName(EnemyKind kind, Language language)
@@ -231,9 +232,11 @@ int ClaimEnemyRewards(Combat *combat, Player *player)
             enemy->rewardGranted = true;
             if (enemy->kind == ENEMY_BOSS) { GrantPlayerRewards(player, 150, 120); continue; }
             defeated++;
-            player->defeatedGoblins++;
-            if (enemy->kind == ENEMY_MELEE) player->meleeDefeated++;
-            else player->rangedDefeated++;
+            if (player->defeatedGoblins < INT_MAX) {
+                player->defeatedGoblins++;
+                if (enemy->kind == ENEMY_MELEE) player->meleeDefeated++;
+                else player->rangedDefeated++;
+            }
             GrantPlayerRewards(player, GOBLIN_GOLD, GOBLIN_EXPERIENCE);
         }
     }

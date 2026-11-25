@@ -1,8 +1,8 @@
 param(
     [ValidateSet('Debug', 'Release')]
     [string]$Configuration = 'Debug',
-    [string]$CompilerPath = 'C:\raylib\w64devkit\bin\gcc.exe',
-    [string]$RaylibSourcePath = 'C:\raylib\raylib\src',
+    [string]$CompilerPath = '',
+    [string]$RaylibSourcePath = '',
     [switch]$CheckMovement,
     [switch]$CheckCombat,
     [switch]$CheckAI,
@@ -16,6 +16,39 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $outputDirectory = Join-Path $projectRoot 'bin'
 $outputPath = Join-Path $outputDirectory 'project-lax.exe'
+
+# Explicit parameters take priority, followed by environment and common installs.
+if (-not $CompilerPath) {
+    $CompilerPath = $env:PROJECT_LAX_GCC
+    if (-not $CompilerPath) {
+        $gccCommand = Get-Command gcc.exe -ErrorAction SilentlyContinue
+        if ($gccCommand) { $CompilerPath = $gccCommand.Source }
+    }
+    if (-not $CompilerPath) {
+        foreach ($candidate in @((Join-Path $projectRoot '..\w64devkit\bin\gcc.exe'), 'C:\raylib\w64devkit\bin\gcc.exe')) {
+            if (Test-Path -LiteralPath $candidate) { $CompilerPath = $candidate; break }
+        }
+    }
+    if (-not $CompilerPath) { throw 'GCC not found. Set PROJECT_LAX_GCC or pass -CompilerPath.' }
+}
+if (-not $RaylibSourcePath) {
+    $RaylibSourcePath = $env:PROJECT_LAX_RAYLIB
+    if (-not $RaylibSourcePath) {
+        foreach ($candidate in @((Join-Path $projectRoot '..\raylib\src'), 'C:\raylib\raylib\src')) {
+            if ((Test-Path -LiteralPath (Join-Path $candidate 'raylib.h')) -and
+                (Test-Path -LiteralPath (Join-Path $candidate 'libraylib.a'))) { $RaylibSourcePath = $candidate; break }
+        }
+    }
+    if (-not $RaylibSourcePath) { throw 'raylib not found. Set PROJECT_LAX_RAYLIB or pass -RaylibSourcePath.' }
+}
+
+function Invoke-ProjectCheck([string]$Executable) {
+    Push-Location -LiteralPath $projectRoot
+    try {
+        & $Executable
+        if ($LASTEXITCODE -ne 0) { throw "Check failed: $Executable (exit $LASTEXITCODE)" }
+    } finally { Pop-Location }
+}
 
 foreach ($requiredPath in @($CompilerPath, (Join-Path $RaylibSourcePath 'raylib.h'), (Join-Path $RaylibSourcePath 'libraylib.a'))) {
     if (-not (Test-Path -LiteralPath $requiredPath)) {
@@ -50,8 +83,7 @@ if ($CheckMovement) {
         '-lraylib', '-lopengl32', '-lgdi32', '-lwinmm', '-lcomdlg32', '-lole32')
     & $CompilerPath @testArguments
     if ($LASTEXITCODE -ne 0) { throw 'Movement check compilation failed.' }
-    & $testPath
-    if ($LASTEXITCODE -ne 0) { throw 'Movement checks failed.' }
+    Invoke-ProjectCheck $testPath
 }
 
 foreach ($checkKind in @('Combat', 'AI', 'Inventory', 'Quest', 'Save', 'Music')) {
@@ -73,6 +105,5 @@ foreach ($checkKind in @('Combat', 'AI', 'Inventory', 'Quest', 'Save', 'Music'))
         '-lraylib', '-lopengl32', '-lgdi32', '-lwinmm', '-lcomdlg32', '-lole32')
     & $CompilerPath @combatArguments
     if ($LASTEXITCODE -ne 0) { throw "$checkKind check compilation failed." }
-    & $combatTestPath
-    if ($LASTEXITCODE -ne 0) { throw "$checkKind checks failed." }
+    Invoke-ProjectCheck $combatTestPath
 }

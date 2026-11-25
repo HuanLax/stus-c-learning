@@ -11,7 +11,7 @@
             "stopAtEntry": false,
             "externalConsole": false,
             "MIMode": "gdb",
-            "miDebuggerPath": "C:/raylib/w64devkit/bin/gdb.exe",
+            "miDebuggerPath": "${config:projectLax.gdbPath}",
             "setupCommands": [
                 {
                     "description": "Use UTF-8 for source text and debug expressions",

@@ -3,8 +3,8 @@
     "configurations": [
         {
             "name": "Windows MinGW-w64",
-            "compilerPath": "C:/raylib/w64devkit/bin/gcc.exe",
-            "includePath": ["${workspaceFolder}/src", "C:/raylib/raylib/src"],
+            "compilerPath": "${config:projectLax.gccPath}",
+            "includePath": ["${workspaceFolder}/src", "${config:projectLax.raylibPath}"],
             "cStandard": "c99",
             "intelliSenseMode": "windows-gcc-x64"
         }

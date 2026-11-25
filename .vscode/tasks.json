@@ -5,7 +5,7 @@
             "label": "Build Debug",
             "type": "process",
             "command": "powershell.exe",
-            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/build.ps1", "-Configuration", "Debug"],
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/build.ps1", "-Configuration", "Debug", "-CompilerPath", "${config:projectLax.gccPath}", "-RaylibSourcePath", "${config:projectLax.raylibPath}"],
             "options": { "cwd": "${workspaceFolder}" },
             "problemMatcher": ["$gcc"],
             "group": { "kind": "build", "isDefault": true }
@@ -23,7 +23,7 @@
             "label": "Build Release",
             "type": "process",
             "command": "powershell.exe",
-            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/build.ps1", "-Configuration", "Release"],
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/build.ps1", "-Configuration", "Release", "-CompilerPath", "${config:projectLax.gccPath}", "-RaylibSourcePath", "${config:projectLax.raylibPath}"],
             "options": { "cwd": "${workspaceFolder}" },
             "problemMatcher": ["$gcc"]
         }

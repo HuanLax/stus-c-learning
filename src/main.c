@@ -98,6 +98,8 @@ static void PrepareSmokeFrame(App *app, int scene)
         const Vector2 views[] = { {256,320}, {1008,384}, {256,1088}, {1008,1088}, {144,208} };
         EnterMap(app, MAP_FIELD, views[scene - 30]);
     }
+    if (scene == 35) EnterMap(app, MAP_FIELD, (Vector2){ 1104, 656 });
+    if (scene == 36) EnterMap(app, MAP_BOSS, app->worlds[MAP_BOSS].spawn);
 }
 
 /* ===== 程序启动、主循环与退出 ===== */
@@ -187,7 +189,8 @@ int main(int argc, char **argv)
                 "player-right", "player-up", "boss-art", "field-art", "cave-stalagmites", "cave-rubble",
                 "bag-icons", "bag-icons-en", "shop-icons", "shop-icons-en", "boss-en", "enemies-zh", "level-max",
                 "quest-dialog", "pause", "death-town", "heal-message", "boss-victory", "quest-complete", "death-here",
-                "field-northwest", "field-northeast", "field-southwest", "field-southeast", "field-canopy" };
+                "field-northwest", "field-northeast", "field-southwest", "field-southeast", "field-canopy",
+                "field-boss-portal", "boss-return-portal" };
             char path[1024];
             int length = snprintf(path, sizeof(path), "%s%s-%s.png",
                                   GetApplicationDirectory(), resizeTest ? "resize" : "stage8", names[frameCount / 2]);
@@ -197,7 +200,7 @@ int main(int argc, char **argv)
                 UnloadImage(screenshot);
             } else screenshotsSaved = false;
         }
-        if (smokeTest && ++frameCount >= 70) app.exitRequested = true;
+        if (smokeTest && ++frameCount >= 74) app.exitRequested = true;
     }
 
     bool verificationPassed = app.assets.supportsChinese && screenshotsSaved;
