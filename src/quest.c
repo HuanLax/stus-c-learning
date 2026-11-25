@@ -1,5 +1,7 @@
+/* 主线任务：阶段推进、击杀计数、入口解锁、奖励和对话页选择。 */
 #include "quest.h"
 
+/* ===== 任务初始化与进度查询 ===== */
 void InitializeQuest(Quest *quest)
 {
     *quest = (Quest){ .stage = QUEST_OFFER };
@@ -29,6 +31,7 @@ bool IsBossUnlocked(const Quest *quest)
     return quest->stage >= QUEST_HUNT_BOSS;
 }
 
+/* ===== 阶段推进与一次性任务奖励 ===== */
 bool AdvanceQuest(Quest *quest, Player *player)
 {
     if (quest->stage == QUEST_OFFER) {
@@ -51,6 +54,7 @@ bool AdvanceQuest(Quest *quest, Player *player)
     return false;
 }
 
+/* ===== 各阶段的对话页数与文案选择 ===== */
 int QuestDialoguePages(const Quest *quest)
 {
     return quest->stage == QUEST_OFFER ? 3 : quest->stage == QUEST_REPORT_FIELD ||

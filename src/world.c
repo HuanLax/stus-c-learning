@@ -1,7 +1,9 @@
+/* 地图与场景：地图布局、碰撞、安全区、传送、镜头和场景绘制。 */
 #include "world.h"
 
 #include <math.h>
 
+/* ===== 地图数据与场景初始化 ===== */
 static void AddScenery(World *world, SceneryKind kind, Rectangle collision, Color color)
 {
     if (world->sceneryCount >= SCENERY_CAPACITY) return;
@@ -142,6 +144,7 @@ void InitializeWorld(World *world, MapId id)
     if (town) InitializeTown(world); else InitializeAdventureObjects(world);
 }
 
+/* ===== 碰撞、移动与交互范围 ===== */
 Rectangle GetInteractionBody(Interaction object)
 {
     Vector2 feet = object.position;
@@ -226,6 +229,7 @@ bool CanMoveWithObstacles(const World *world, Rectangle from, Rectangle to,
     return true;
 }
 
+/* ===== 安全区、地图出口与镜头 ===== */
 static float GetCameraTarget(float position, float worldSize, float viewSize)
 {
     if (worldSize <= viewSize) return worldSize / 2.0f;
@@ -269,6 +273,7 @@ Camera2D GetWorldCamera(const World *world, Vector2 position, int screenWidth, i
     return camera;
 }
 
+/* ===== 场景物件与备用图形绘制 ===== */
 static void DrawPerson(Vector2 feet, Color clothing)
 {
     DrawEllipse((int)feet.x, (int)feet.y - 2, 12, 4, (Color){ 15, 24, 23, 100 });
@@ -441,6 +446,7 @@ static void DrawGround(const World *world, const UiAssets *assets)
 
 /* Sort references, never the actual map records. -1 is the player; other
    indices select scenery, interactions, then temporary actors in that order. */
+/* ===== 按脚底位置排序并绘制角色与场景 ===== */
 typedef struct DrawEntry { float feetY; int index; } DrawEntry;
 
 static int BuildDrawList(const World *world, Vector2 playerPosition,

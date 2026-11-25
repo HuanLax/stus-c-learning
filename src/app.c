@@ -1,9 +1,11 @@
+/* 流程协调：连接角色、战斗、地图、任务、背包与存档，管理游戏状态切换。 */
 #include "app.h"
 #include "ui.h"
 
 #include <stdio.h>
 #include <math.h>
 
+/* ===== 初始化与每帧更新 ===== */
 void InitializeApp(App *app)
 {
     *app = (App){ .language = LANGUAGE_ENGLISH, .screen = SCREEN_MENU, .nearbyInteraction = -1,
@@ -85,6 +87,7 @@ void UpdateApp(App *app)
     app->camera = GetWorldCamera(&app->worlds[app->currentMap], app->player.position, GAME_WIDTH, GAME_HEIGHT);
 }
 
+/* ===== 地图切换、场景交互与复活 ===== */
 void EnterMap(App *app, MapId map, Vector2 position)
 {
     if (map < MAP_TOWN || map >= MAP_COUNT || !CanStandInWorld(&app->worlds[map], GetPlayerBody(position))) return;
@@ -144,6 +147,7 @@ void RespawnAppPlayer(App *app, bool returnToTown)
     RevivePlayer(&app->player);
 }
 
+/* ===== 任务推进与对话确认 ===== */
 void UpdateAppQuest(App *app)
 {
     UpdateQuestProgress(&app->quest, &app->player);
@@ -175,6 +179,7 @@ void ConfirmQuestDialogue(App *app)
     } else app->screen = SCREEN_PLAY;
 }
 
+/* ===== 新游戏、继续游戏与存档 ===== */
 void StartNewGame(App *app)
 {
     InitializePlayer(&app->player, app->worlds[MAP_TOWN].spawn);
@@ -273,6 +278,7 @@ void RequestAppExit(App *app)
     app->screen = SCREEN_SAVE_ERROR;
 }
 
+/* ===== 背包与商店操作 ===== */
 static TextId InventoryResultMessage(InventoryResult result)
 {
     const TextId messages[] = { TEXT_EQUIP_SUCCESS, TEXT_EQUIP_BUSY, TEXT_BAG_FULL,
@@ -295,6 +301,7 @@ void BuySelectedProduct(App *app)
     app->inventoryMessage = result == INVENTORY_OK ? TEXT_BUY_SUCCESS : InventoryResultMessage(result);
 }
 
+/* ===== 资源清理 ===== */
 void UnloadApp(App *app)
 {
     UnloadUiAssets(&app->assets);

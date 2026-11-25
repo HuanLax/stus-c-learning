@@ -7,7 +7,9 @@ typedef enum Language {
     LANGUAGE_COUNT
 } Language;
 
+/* 文案编号会写入存档；新增项请追加到 TEXT_COUNT 前，不要重排现有项。 */
 typedef enum TextId {
+    /* 菜单、语言与字体提示 */
     TEXT_SUBTITLE,
     TEXT_STAGE,
     TEXT_DESCRIPTION,
@@ -22,11 +24,13 @@ typedef enum TextId {
     TEXT_START,
     TEXT_RESUME,
     TEXT_PAUSED,
+    /* 地图状态与基本操作 */
     TEXT_TOWN,
     TEXT_SAFE,
     TEXT_MOVE_HELP,
     TEXT_UI_HELP,
     TEXT_FACING_HELP,
+    /* 场景名称与交互提示 */
     TEXT_QUEST_NPC,
     TEXT_MERCHANT,
     TEXT_HEAL_POINT,
@@ -38,6 +42,7 @@ typedef enum TextId {
     TEXT_HEAL_PREVIEW,
     TEXT_EXIT_PREVIEW,
     TEXT_COORDINATES,
+    /* 地图名称、入口与传送反馈 */
     TEXT_FIELD,
     TEXT_BOSS_MAP,
     TEXT_OUTSIDE_SAFE,
@@ -45,6 +50,7 @@ typedef enum TextId {
     TEXT_BOSS_EXIT,
     TEXT_GATE_LOCKED,
     TEXT_EXIT_ERROR,
+    /* 武器、生命、复活与战斗状态 */
     TEXT_SWORD,
     TEXT_STAFF,
     TEXT_ATTACK_HELP,
@@ -60,6 +66,7 @@ typedef enum TextId {
     TEXT_PEACE,
     TEXT_IN_COMBAT,
     TEXT_DISENGAGE,
+    /* 背包、商店、交易与装备反馈 */
     TEXT_EMPTY_SLOT,
     TEXT_IRON_SWORD,
     TEXT_WOOD_STAFF,
@@ -80,6 +87,7 @@ typedef enum TextId {
     TEXT_ALREADY_EQUIPPED,
     TEXT_ITEM_INVALID,
     TEXT_BUY_SUCCESS,
+    /* 属性、价格、成长与奖励格式 */
     TEXT_BONUS,
     TEXT_PRICE,
     TEXT_GOLD,
@@ -89,6 +97,7 @@ typedef enum TextId {
     TEXT_REWARD,
     TEXT_SOLD_OUT,
     TEXT_ITEM_ATTACK,
+    /* 村长与主线对话 */
     TEXT_ELDER,
     TEXT_QUEST_TITLE,
     TEXT_QUEST_GREETING,
@@ -102,29 +111,39 @@ typedef enum TextId {
     TEXT_QUEST_FINAL_THANKS,
     TEXT_QUEST_FINAL_REWARD,
     TEXT_QUEST_AFTER,
+    /* 任务对话按钮 */
     TEXT_NEXT,
     TEXT_ACCEPT_QUEST,
     TEXT_REPORT_QUEST,
     TEXT_CONTINUE_EXPLORING,
+    /* 任务目标 */
     TEXT_OBJECTIVE_OFFER,
     TEXT_OBJECTIVE_FIELD,
     TEXT_OBJECTIVE_REPORT,
     TEXT_OBJECTIVE_BOSS,
     TEXT_OBJECTIVE_FINAL,
     TEXT_OBJECTIVE_COMPLETE,
+    /* 头目胜利与通关提示 */
     TEXT_BOSS_NAME,
     TEXT_BOSS_VICTORY,
     TEXT_BOSS_VICTORY_BODY,
     TEXT_GAME_COMPLETE,
     TEXT_GAME_COMPLETE_BODY,
+    /* 存档状态、确认与错误处理 */
     TEXT_SAVE_FOUND, TEXT_SAVE_NONE, TEXT_SAVE_BAD, TEXT_SAVE_NEW,
     TEXT_SAVE_LOADED, TEXT_SAVE_OK, TEXT_SAVE_BUSY, TEXT_SAVE_FAILED,
     TEXT_SAVE_PREVIEW, TEXT_LOAD_GAME, TEXT_NEW_CONFIRM, TEXT_NEW_CONFIRM_BODY,
     TEXT_CONFIRM_NEW, TEXT_CANCEL, TEXT_RETRY_SAVE, TEXT_EXIT_UNSAVED,
     TEXT_SAVE_ERROR_BODY, TEXT_SAVE_HINT,
+    /* 等级、经验与状态栏标签 */
     TEXT_LEVEL, TEXT_XP, TEXT_XP_MAX,
     TEXT_HUD_HP, TEXT_HUD_MP, TEXT_HUD_XP, TEXT_HUD_LEVEL,
-    TEXT_ULTIMATE, TEXT_NOT_AVAILABLE, TEXT_HUD_BAG,
+    /* 当前界面未使用的技能标签（保留编号） */
+    TEXT_ULTIMATE, TEXT_NOT_AVAILABLE,
+    /* 背包快捷按钮 */
+    TEXT_HUD_BAG,
+    /* 音乐控制（追加编号以兼容旧存档） */
+    TEXT_MUSIC_HELP, TEXT_MUSIC_VOLUME,
     TEXT_COUNT
 } TextId;
 

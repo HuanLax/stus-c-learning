@@ -8,7 +8,8 @@ param(
     [switch]$CheckAI,
     [switch]$CheckInventory,
     [switch]$CheckQuest,
-    [switch]$CheckSave
+    [switch]$CheckSave,
+    [switch]$CheckMusic
 )
 
 $ErrorActionPreference = 'Stop'
@@ -53,13 +54,15 @@ if ($CheckMovement) {
     if ($LASTEXITCODE -ne 0) { throw 'Movement checks failed.' }
 }
 
-foreach ($checkKind in @('Combat', 'AI', 'Inventory', 'Quest', 'Save')) {
+foreach ($checkKind in @('Combat', 'AI', 'Inventory', 'Quest', 'Save', 'Music')) {
     if (($checkKind -eq 'Combat' -and -not $CheckCombat) -or ($checkKind -eq 'AI' -and -not $CheckAI)) { continue }
     if ($checkKind -eq 'Inventory' -and -not $CheckInventory) { continue }
     if ($checkKind -eq 'Quest' -and -not $CheckQuest) { continue }
     if ($checkKind -eq 'Save' -and -not $CheckSave) { continue }
+    if ($checkKind -eq 'Music' -and -not $CheckMusic) { continue }
     $testFile = if ($checkKind -eq 'Combat') { 'test_combat.c' } elseif ($checkKind -eq 'AI') { 'test_enemy_ai.c' }
-        elseif ($checkKind -eq 'Inventory') { 'test_inventory.c' } elseif ($checkKind -eq 'Quest') { 'test_quest.c' } else { 'test_save.c' }
+        elseif ($checkKind -eq 'Inventory') { 'test_inventory.c' } elseif ($checkKind -eq 'Quest') { 'test_quest.c' }
+        elseif ($checkKind -eq 'Music') { 'test_music.c' } else { 'test_save.c' }
     $combatTestPath = Join-Path $outputDirectory ("test-" + $checkKind.ToLower() + '.exe')
     $combatSources = @($sourceFiles | Where-Object { [System.IO.Path]::GetFileName($_) -ne 'main.c' })
     $combatArguments = @('-std=c99', '-Wall', '-Wextra', '-Wpedantic', '-Werror', '-g',

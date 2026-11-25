@@ -1,9 +1,11 @@
+/* 通用战斗：敌人配置、近战判定、投射物、伤害、奖励与战斗效果。 */
 #include "combat.h"
 #include "enemy_ai.h"
 #include "boss.h"
 
 #include <math.h>
 
+/* ===== 敌人名称与碰撞体 ===== */
 const char *GetEnemyName(EnemyKind kind, Language language)
 {
     TextId name;
@@ -37,6 +39,7 @@ Vector2 GetEnemyAttackOrigin(const Enemy *enemy)
     return (Vector2){ enemy->position.x, enemy->position.y - (enemy->kind == ENEMY_BOSS ? 24 : 12) };
 }
 
+/* ===== 战斗规则与敌人出生配置 ===== */
 void InitializeCombat(Combat *combat, MapId map)
 {
     *combat = (Combat){ 0 };
@@ -68,6 +71,7 @@ void InitializeCombat(Combat *combat, MapId map)
     combat->wasSafe = true;
 }
 
+/* ===== 攻击范围、视线与玩家攻击 ===== */
 Rectangle GetSwordArea(const Combat *combat, const Player *player)
 {
     Vector2 p = { player->position.x, player->position.y - 12 };
@@ -124,6 +128,7 @@ bool GetAttackIntent(bool *armed, bool held, bool worldReady)
     return held && *armed;
 }
 
+/* ===== 伤害与投射物更新 ===== */
 static void HitEnemy(Enemy *enemy, int damage)
 {
     enemy->health -= damage;
@@ -185,6 +190,7 @@ static void UpdateProjectiles(Combat *combat, Player *player, const World *world
     }
 }
 
+/* ===== 战斗更新与击杀奖励 ===== */
 void UpdateCombat(Combat *combat, Player *player, const World *world, float seconds, bool attackHeld)
 {
     if (seconds <= 0 || player->health <= 0) return;
@@ -234,6 +240,7 @@ int ClaimEnemyRewards(Combat *combat, Player *player)
     return defeated;
 }
 
+/* ===== 战斗效果绘制 ===== */
 void DrawCombat(const Combat *combat, const Player *player)
 {
     for (int i = 0; i < combat->enemyCount; i++) {
