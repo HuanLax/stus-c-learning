@@ -120,7 +120,7 @@ static void InitializeAdventureObjects(World *world)
              如只修改这个入口的行为，请同时判断 currentMap == MAP_FIELD 和 index == 1。
            - 图标：本文件 DrawGround() 的 SPRITE_PORTAL，图片映射在 assets.c。
            - 入口名称：ui.c 的 GetInteractionName()，目前按目标地图选择名称。
-           此点是草地 interactions[1]，测试也引用此索引；调整添加顺序时须同步检查。
+           此点是草地 interactions[1]；调整添加顺序时须同步检查。
         */
         AddInteraction(world, (Interaction){ INTERACTION_EXIT, { 1184, 656 }, MAP_BOSS, { 112, 400 } });
         AddInteraction(world, (Interaction){ .kind = INTERACTION_HEAL, .position = { 144, 688 } });

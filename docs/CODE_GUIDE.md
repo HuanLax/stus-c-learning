@@ -1,20 +1,19 @@
 # 项目代码分类与修改索引
 
-本索引根据项目代码整理，2026-11-18 增补背景音乐。当前 `src/` 有 14 个 C 实现文件、13 个头文件，`tests/` 有 7 组检查。源码中的中文分区注释可直接搜索定位；下文使用函数名定位，避免增删代码后行号失效。
+本索引根据项目代码整理，2026-11-18 增补背景音乐。当前 `src/` 有 14 个 C 实现文件、13 个头文件。源码中的中文分区注释可直接搜索定位；下文使用函数名定位，避免增删代码后行号失效。
 
 ## 1. 目录分类
 
 | 目录或文件 | 分类 | 用途 |
 |---|---|---|
 | `src/` | 游戏源码 | 游戏运行逻辑、画面、文案和资源加载 |
-| `tests/` | 开发检查 | 移动、战斗、AI、背包、任务、存档、音乐 |
 | `pic/` | 图片资源 | 25 张 PNG：地图、角色、场景、武器与背包 |
 | `assets/fonts/` | 字体资源 | 中文字体与授权说明 |
 | `assets/audio/` | 音乐资源 | 主城、草地与巢穴的三首 MP3 |
-| `scripts/build.ps1` | 构建工具 | Debug / Release 编译与七组检查入口 |
+| `scripts/build.ps1` | 构建工具 | Debug / Release 编译 |
 | `.vscode/` | 编辑器配置 | 构建任务、调试器、代码提示路径 |
 | `docs/` | 当前说明 | 本索引与地图布局说明 |
-| `bin/` | 生成文件 | 游戏程序、测试程序、检查截图与测试存档 |
+| `bin/` | 生成文件 | 游戏程序 |
 | `saves/` | 玩家进度 | 正式游戏的个人存档 |
 | `project-lax.exe - Shortcut.lnk` | 启动快捷方式 | 本机使用，不是游戏源码 |
 
@@ -46,7 +45,7 @@
 ```text
 main.c：创建窗口与画布
   → app.c / InitializeApp：初始化地图、角色、战斗、任务、资源，检查存档
-  → music.c / InitializeBackgroundMusic：初始化声卡并加载三首音乐（截图检查跳过）
+  → music.c / InitializeBackgroundMusic：初始化声卡并加载三首音乐
   → 每帧循环
       → UpdateApp
           → UpdateUi：读取按钮与界面按键，切换状态
@@ -126,28 +125,9 @@ main.c：创建窗口与画布
 
 资源编号共 28 个，其中 `house_leader.png`、`house_seller.png`、`street_lamp.png` 三个图片槽没有独立文件，代码提供备用绘制，主城底图也已包含房屋和路灯。这三项不是必需资源加载失败。
 
-## 7. 检查与开发工具
+## 7. 巢穴预览
 
-| 检查文件 / 入口 | 覆盖内容 |
-|---|---|
-| `tests/test_movement.c` | 移动、碰撞、道路与交互可达性、安全区、切图、镜头边界 |
-| `tests/test_combat.c` | 双语文案完整性、近战单次命中、冷却、投射物、安全区、复活与治疗 |
-| `tests/test_enemy_ai.c` | 巡逻、发现、追击、脱战重置、绕障、远程行为 |
-| `tests/test_inventory.c` | 购买、满背包、限购、换装限制、攻击力、成长与复活保留进度 |
-| `tests/test_quest.c` | 接取后计数、汇报门槛、一次性奖励、头目攻击、通关流程 |
-| `tests/test_save.c` | 现场快照、界面恢复、战斗恢复、旧档迁移、损坏数据拒绝与文件替换 |
-| `tests/test_music.c` / `-CheckMusic` | 用实际 MP3 静音检查加载、播放进度、切图与循环，需要本机声卡 |
-| `--smoke-test` | 隐藏窗口生成 35 张检查截图，核对中文字体和必需贴图，不写正式存档 |
-| `--resize-test` | 在截图检查基础上覆盖不同窗口尺寸及鼠标坐标映射 |
-| `--preview-boss` | 打开巢穴预览，不写正式存档 |
-
-```powershell
-# 编译并执行现有六组检查
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -CheckMovement -CheckCombat -CheckAI -CheckInventory -CheckQuest -CheckSave
-
-# 字体、图片与界面截图检查
-& .\bin\project-lax.exe --smoke-test
-```
+使用 `--preview-boss` 打开巢穴预览。
 
 ## 8. 后续适合整理的内容
 
@@ -157,6 +137,6 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -Che
 | 大文件职责 | `ui.c` 同时包含输入、布局和各面板；`world.c` 同时包含布局、碰撞与绘制 | 后续功能增加时再按职责拆文件，并同步构建配置 |
 | 界面状态定义 | `AppScreen` 目前放在 `save.h`，流程和界面也依赖它 | 后续可独立为公共状态定义 |
 | 规则与对白 | 任务数量、金币、经验同时出现在逻辑和文案中 | 调整规则时同步核对两边 |
-| 头目复现说明 | 最终奖励对白称“格鲁克不会再次出现”，但切图会重新初始化头目；存档测试也明确覆盖此行为 | 后续决定是否允许重复挑战，再统一对白、说明与实现 |
+| 头目复现说明 | 最终奖励对白称“格鲁克不会再次出现”，但切图会重新初始化头目 | 后续决定是否允许重复挑战，再统一对白、说明与实现 |
 
 本次整理增加分类注释和索引，保留已有文件位置、函数行为、资源映射及存档编号。

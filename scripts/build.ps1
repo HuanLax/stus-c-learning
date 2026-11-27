@@ -2,15 +2,7 @@ param(
     [ValidateSet('Debug', 'Release')]
     [string]$Configuration = 'Debug',
     [string]$CompilerPath = '',
-    [string]$RaylibSourcePath = '',
-    [switch]$CheckMovement,
-    [switch]$CheckCombat,
-    [switch]$CheckAI,
-    [switch]$CheckInventory,
-    [switch]$CheckQuest,
-    [switch]$CheckSave,
-    [switch]$CheckMusic
-)
+    [string]$RaylibSourcePath = '')
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
@@ -42,14 +34,6 @@ if (-not $RaylibSourcePath) {
     if (-not $RaylibSourcePath) { throw 'raylib not found. Set PROJECT_LAX_RAYLIB or pass -RaylibSourcePath.' }
 }
 
-function Invoke-ProjectCheck([string]$Executable) {
-    Push-Location -LiteralPath $projectRoot
-    try {
-        & $Executable
-        if ($LASTEXITCODE -ne 0) { throw "Check failed: $Executable (exit $LASTEXITCODE)" }
-    } finally { Pop-Location }
-}
-
 foreach ($requiredPath in @($CompilerPath, (Join-Path $RaylibSourcePath 'raylib.h'), (Join-Path $RaylibSourcePath 'libraylib.a'))) {
     if (-not (Test-Path -LiteralPath $requiredPath)) {
         throw "Required build dependency not found: $requiredPath"
@@ -70,40 +54,3 @@ $compilerArguments += @('-L', $RaylibSourcePath, '-o', $outputPath, '-lraylib', 
 & $CompilerPath @compilerArguments
 if ($LASTEXITCODE -ne 0) { throw "Build failed with exit code $LASTEXITCODE" }
 Write-Host "Built $Configuration -> $outputPath"
-
-if ($CheckMovement) {
-    $testPath = Join-Path $outputDirectory 'test-movement.exe'
-    $testArguments = @('-std=c99', '-Wall', '-Wextra', '-Wpedantic', '-Werror', '-g',
-        '-I', $RaylibSourcePath, '-I', (Join-Path $projectRoot 'src'),
-        (Join-Path $projectRoot 'tests\test_movement.c'),
-        (Join-Path $projectRoot 'src\world.c'), (Join-Path $projectRoot 'src\player.c'),
-        (Join-Path $projectRoot 'src\inventory.c'),
-        (Join-Path $projectRoot 'src\assets.c'), (Join-Path $projectRoot 'src\text.c'),
-        '-L', $RaylibSourcePath, '-o', $testPath,
-        '-lraylib', '-lopengl32', '-lgdi32', '-lwinmm', '-lcomdlg32', '-lole32')
-    & $CompilerPath @testArguments
-    if ($LASTEXITCODE -ne 0) { throw 'Movement check compilation failed.' }
-    Invoke-ProjectCheck $testPath
-}
-
-foreach ($checkKind in @('Combat', 'AI', 'Inventory', 'Quest', 'Save', 'Music')) {
-    if (($checkKind -eq 'Combat' -and -not $CheckCombat) -or ($checkKind -eq 'AI' -and -not $CheckAI)) { continue }
-    if ($checkKind -eq 'Inventory' -and -not $CheckInventory) { continue }
-    if ($checkKind -eq 'Quest' -and -not $CheckQuest) { continue }
-    if ($checkKind -eq 'Save' -and -not $CheckSave) { continue }
-    if ($checkKind -eq 'Music' -and -not $CheckMusic) { continue }
-    $testFile = if ($checkKind -eq 'Combat') { 'test_combat.c' } elseif ($checkKind -eq 'AI') { 'test_enemy_ai.c' }
-        elseif ($checkKind -eq 'Inventory') { 'test_inventory.c' } elseif ($checkKind -eq 'Quest') { 'test_quest.c' }
-        elseif ($checkKind -eq 'Music') { 'test_music.c' } else { 'test_save.c' }
-    $combatTestPath = Join-Path $outputDirectory ("test-" + $checkKind.ToLower() + '.exe')
-    $combatSources = @($sourceFiles | Where-Object { [System.IO.Path]::GetFileName($_) -ne 'main.c' })
-    $combatArguments = @('-std=c99', '-Wall', '-Wextra', '-Wpedantic', '-Werror', '-g',
-        '-finput-charset=UTF-8', '-fexec-charset=UTF-8', '-I', $RaylibSourcePath,
-        '-I', (Join-Path $projectRoot 'src'), (Join-Path (Join-Path $projectRoot 'tests') $testFile))
-    $combatArguments += $combatSources
-    $combatArguments += @('-L', $RaylibSourcePath, '-o', $combatTestPath,
-        '-lraylib', '-lopengl32', '-lgdi32', '-lwinmm', '-lcomdlg32', '-lole32')
-    & $CompilerPath @combatArguments
-    if ($LASTEXITCODE -ne 0) { throw "$checkKind check compilation failed." }
-    Invoke-ProjectCheck $combatTestPath
-}

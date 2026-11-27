@@ -101,7 +101,7 @@ const char *GetUiText(Language language, TextId id)
             return language == LANGUAGE_ENGLISH ? "Return to town" : "返回主城";
         case TEXT_RESPAWN_HERE:
             return language == LANGUAGE_ENGLISH ? "Map safe area" : "当前地图安全区";
-        case TEXT_TEST_ENEMY:
+        case TEXT_GENERIC_ENEMY:
             return language == LANGUAGE_ENGLISH ? "Goblin" : "哥布林";
         case TEXT_HEALED:
             return language == LANGUAGE_ENGLISH ? "Health fully restored." : "生命值已全部恢复。";

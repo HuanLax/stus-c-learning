@@ -14,7 +14,7 @@ const char *GetEnemyName(EnemyKind kind, Language language)
         case ENEMY_MELEE: name = TEXT_MELEE_GOBLIN; break;
         case ENEMY_RANGED: name = TEXT_RANGED_GOBLIN; break;
         case ENEMY_BOSS: name = TEXT_BOSS_NAME; break;
-        default: name = TEXT_TEST_ENEMY; break;
+        default: name = TEXT_GENERIC_ENEMY; break;
     }
     return GetUiText(language, name); /* Resolve on every draw, never cache a language-specific name. */
 }
@@ -44,7 +44,7 @@ Vector2 GetEnemyAttackOrigin(const Enemy *enemy)
 void InitializeCombat(Combat *combat, MapId map)
 {
     *combat = (Combat){ 0 };
-    /* All first-playtest values live in this local record, not global variables. */
+    /* Combat tuning values live in this local record, not global variables. */
     combat->rules = (CombatRules){
         .enemyDamage = 18,
         .attackCooldown = 0.45f, .swingDuration = 0.14f,

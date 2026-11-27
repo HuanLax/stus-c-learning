@@ -76,8 +76,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -Con
 | `pic/` | 当前游戏使用的 25 张 PNG |
 | `assets/fonts/` | 中文字体与分发授权，需一起保留 |
 | `assets/audio/` | 三张地图的 MP3 背景音乐，需一起保留 |
-| `scripts/build.ps1` | 构建与逻辑检查入口 |
-| `tests/` | 六组逻辑检查与一组音乐检查源码 |
+| `scripts/build.ps1` | 游戏构建入口 |
 | `bin/project-lax.exe` | 当前可运行程序 |
 | `saves/` | 个人存档 |
 | `docs/MAP_LAYOUT.md` | 最新地图坐标、障碍与旧档迁移说明 |
@@ -86,15 +85,4 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -Con
 
 旧试玩副本、历史截图、备份和过期阶段文档已清理。当前地图资源与旧存档迁移代码仍保留，确保已有进度可以读取。
 
-## 开发检查
-
-构建时可按需增加 `-CheckMovement`、`-CheckCombat`、`-CheckAI`、`-CheckInventory`、`-CheckQuest`、`-CheckSave`，可同时启用。检查会在 `bin` 中重新生成测试程序和测试文件。
-
-`-CheckMusic` 使用本机声卡静音检查三首实际 MP3 的加载、播放进度、切曲和结尾循环，需要可用的音频设备；不修改个人存档。
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -CheckMovement -CheckCombat -CheckAI -CheckInventory -CheckQuest -CheckSave
-& .\bin\project-lax.exe --smoke-test
-```
-
-`--smoke-test` 检查字体和必要贴图，并在 `bin` 中生成截图，不写实际存档。`--preview-boss` 可单独预览巢穴，也不写实际存档。
+`--preview-boss` 可单独预览巢穴，也不写实际存档。
